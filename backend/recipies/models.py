@@ -36,11 +36,12 @@ class FoodgramUser(AbstractUser):
         choices=Config.USER_ROLES_CHOICE,
         default=UserRoles.USER,
     )
-    # avatar = models.ImageField(
-    #     upload_to='avatars/images/',
-    #     # null=True,
-    #     default=None,
-    # )
+    avatar = models.ImageField(
+        upload_to='avatars/',
+        blank=True,
+        null=True,
+        default=None,
+    )
 
     @property
     def is_admin(self):
@@ -49,7 +50,7 @@ class FoodgramUser(AbstractUser):
         )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username',)
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     def __str__(self):
         return (f'username: {self.username[:Config.LENGTH_ON_STR]}, '
@@ -96,6 +97,7 @@ class Measurement(models.Model):
     unit = models.CharField(
         verbose_name='Единица измерения',
         max_length=Config.MEASURE_UNIT_MAX_LENGTH,
+        db_index=True,
     )
 
     def __str__(self):

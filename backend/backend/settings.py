@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -13,7 +14,7 @@ SECRET_KEY = 'django-insecure-p$ix8tfk$%$d_b*#2so0azb#1=u@5!qav27ta^8pmu#5d%qe(q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -112,6 +113,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -128,6 +132,7 @@ AUTH_USER_MODEL = 'recipies.FoodgramUser'
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.AllowAny',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -136,11 +141,18 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
-    # 'LOGIN_FIELD': 'email',
+    'LOGIN_FIELD': 'email',
+    'HIDE_USERS': False,
     'SERIALIZERS': {
-        # 'user_create': 'djoser.serializers.UserCreateSerializer',
-        'user_create': 'api.serializers.UserSerializer',
-        # 'user': 'djoser.serializers.UserSerializer',
-        # 'current_user': 'djoser.serializers.UserSerializer',
-    }
+    # #    'user_create': 'djoser.serializers.UserCreateSerializer',
+    # #     # 'user_create': 'api.serializers.UserCreateSerializer',
+    # #     'user': 'djoser.serializers.UserSerializer',
+        'user': 'api.serializers.UserSerializer',
+    # #     'current_user': 'djoser.serializers.UserSerializer',
+        'current_user': 'api.serializers.UserSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ('api.permissions.IsUsersPathOrIsAuthenticated',),
+        'user_list': ('rest_framework.permissions.AllowAny',),
+    },
 }

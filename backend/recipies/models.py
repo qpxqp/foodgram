@@ -37,11 +37,20 @@ class FoodgramUser(AbstractUser):
         default=UserRoles.USER,
     )
     avatar = models.ImageField(
+        verbose_name='Аватарка',
         upload_to='avatars/',
         blank=True,
         null=True,
         default=None,
     )
+    # subscriptions = models.ManyToManyField(
+    #     'self',
+    #     # verbose_name='Подписчик',
+    #     through='Subscription',
+    #     through_fields=('subscriber', 'author'),
+    #     symmetrical=False,
+    #     related_name='subscribers',
+    # )
 
     @property
     def is_admin(self):
@@ -210,28 +219,28 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField()
 
 
-class Subscription(models.Model):
-    """Модель подписок."""
+# class Subscription(models.Model):
+#     """Модель подписок."""
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower',  # кто подписан
-    )
-    following = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following',  # на кого подписан
-    )
+#     subscriber = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         related_name='follower',  # кто подписан
+#     )
+#     author = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         related_name='following',  # на кого подписан
+#     )
 
-    class Meta:
-        constraints = (
-            models.UniqueConstraint(
-                fields=('user', 'following'),
-                name='unique_user_following',
-            ),
-            models.CheckConstraint(
-                check=~models.Q(following=models.F('user')),
-                name='dont_follow_yourself',
-            ),
-        )
+#     class Meta:
+#         constraints = (
+#             models.UniqueConstraint(
+#                 fields=('user', 'following'),
+#                 name='unique_user_following',
+#             ),
+#             models.CheckConstraint(
+#                 check=~models.Q(following=models.F('user')),
+#                 name='dont_follow_yourself',
+#             ),
+#         )

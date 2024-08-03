@@ -2,7 +2,7 @@ from django.conf import settings
 from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
-from .views import AvatarViewSet
+from .views import UserAvatarViewSet
 
 app_name = 'api'
 
@@ -12,7 +12,9 @@ router_v1 = DefaultRouter() if settings.DEBUG else SimpleRouter()
 auth_patterns = [
     # re_path(r'^users/$', UsersViewSet.as_view({'get': 'list'})),
     path('auth/', include('djoser.urls.authtoken')),
-    path('users/me/avatar/', AvatarViewSet.as_view({'put': 'update', 'delete': 'destroy'}), name='avatar'),
+    path('users/me/avatar/', UserAvatarViewSet.as_view(
+        {'put': 'update', 'delete': 'destroy'}
+    ), name='avatar'),
     path('', include('djoser.urls')),
 ]
 

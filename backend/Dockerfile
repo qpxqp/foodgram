@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 
+COPY starter.sh .
+
 RUN pip install gunicorn==20.1.0 && \
     pip install -r requirements.txt --no-cache-dir
 

@@ -106,16 +106,15 @@ class Measurement(models.Model):
     unit = models.CharField(
         verbose_name='Единица измерения',
         max_length=Config.MEASURE_UNIT_MAX_LENGTH,
-        db_index=True,
+        # db_index=True,
     )
 
     def __str__(self):
         return (f'unit: {self.unit[:Config.LENGTH_ON_STR]}')
 
     class Meta:
-        verbose_name = 'Единица'
-        verbose_name_plural = 'Единицы'
-        default_related_name = 'measurements'
+        verbose_name = 'Единица измерения'
+        verbose_name_plural = 'Единицы измерения'
         ordering = ('unit',)
 
 

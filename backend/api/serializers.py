@@ -7,7 +7,7 @@ from djoser.serializers import (
 )
 from rest_framework import serializers
 
-from recipies.models import User
+from recipies.models import Ingredient, Measurement, Tag, User
 
 
 class Base64ImageField(serializers.ImageField):
@@ -56,3 +56,38 @@ class UserAvatarSerializer(serializers.ModelSerializer):
         instance.avatar = validated_data.get('avatar', instance.avatar)
         instance.save()
         return instance
+
+
+class TagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
+class MeasurementSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Measurement
+        fields = ('unit',)
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+
+    # measurement_unit = serializers.SlugRelatedField(
+    #     queryset=Measurement.objects.all(),
+    #     slug_field='unit',
+    # )
+    # measurement_unit = MeasurementSerializer()
+
+    class Meta:
+        model = Ingredient
+        fields = ('name', 'measurement_unit')
+
+    # def create(self, validated_data):
+    #     # print(validated_data)
+    #     measurement_unit = validated_data.get('measurement_unit')
+    #     unit, status = Measurement.objects.get_or_create(measurement_unit)
+    #     ingredient = Ingredient.objects.create(**validated_data)
+    #     # ingredient.save()
+    #     return ingredient

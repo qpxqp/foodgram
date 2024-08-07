@@ -37,6 +37,8 @@ class Config:
     )
     USERNAME_FAILED = 'Имя пользователя {username} недопустимо.'
     COOKING_TIME_ERROR = 'Значение не может быть меньше {}.'
+    PERMISSION_DENIED = 'Недостаточно прав для выполнения действия.'
+    FIELD_EMPTY_ERROR = 'Поле {} должно быть заполнено.'
+    FIELDS_UNIQUE_ERROR = 'Элементы поля {} должны быть уникальными.'
     # USERNAME_OR_EMAIL_EXIST = 'Значение {} уже занято.'
-    # PERMISSION_DENIED = 'Недостаточно прав для выполнения действия.'
     # USER_DELETED = 'Пользователь {user} удален.'

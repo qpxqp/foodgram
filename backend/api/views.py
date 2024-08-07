@@ -1,14 +1,16 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, status
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import ValidationError, PermissionDenied, MethodNotAllowed
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-# from .permissions import IsAdmin
+from recipies.config import Config
+from .permissions import AdminOrReadOnly
 from .serializers import (
-    IngredientSerializer, MeasurementSerializer, TagSerializer, UserAvatarSerializer, UserSerializer
+    IngredientSerializer, RecipeSerializer, TagSerializer,
+    UserAvatarSerializer, UserSerializer,
 )
-from recipies.models import Ingredient, Measurement, Tag, User
+from recipies.models import Ingredient, Recipe, Tag, User
 
 
 # class UsersViewSet(viewsets.ModelViewSet):
@@ -48,28 +50,51 @@ class UserAvatarViewSet(mixins.UpdateModelMixin,
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
+class TagViewSet(viewsets.ModelViewSet):
 
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AdminOrReadOnly,)
     pagination_class = None
-
-
-class MeasurementViewSet(viewsets.ModelViewSet):
-    serializer_class = MeasurementSerializer
-    queryset = Measurement.objects.all()
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
 
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    permission_classes = (AllowAny,)
-    pagination_class = None
+    permission_classes = (AdminOrReadOnly,)
+    pagination_class = None  # без фильтров с пагинацией не работает поиск
 
-    def create(self, request, *args, **kwargs):
-        unit, _ = Measurement.objects.get_or_create(
-            unit=request.data.get('measurement_unit')
-        )
-        return super().create(request, *args, **kwargs)
+
+class RecipeViewSet(viewsets.ModelViewSet):
+
+    serializer_class = RecipeSerializer
+    queryset = Recipe.objects.all()
+    permission_classes = (IsAuthenticated,)  # поправить
+    # pagination_class = None
+
+    def get_serializer_class(self):
+        # if self.action == 'list':
+        #     return RecipeListSerializer
+        return RecipeSerializer
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = 
+    #     return super().list(request, *args, **kwargs)
+
+    # def create(self, request, *args, **kwargs):
+    #     return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        if request.method in 'PUT':
+            raise MethodNotAllowed('PUT')
+        return super().update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied(Config.PERMISSION_DENIED)
+        serializer.save(author=self.request.user)
+        return super().perform_update(serializer)

@@ -82,6 +82,7 @@ class Tag(models.Model):
     name = models.CharField(
         verbose_name='Название',
         max_length=Config.TAG_NAME_MAX_LENGTH,
+        unique=True,
     )
     slug = models.SlugField(
         verbose_name='Слаг',
@@ -100,22 +101,22 @@ class Tag(models.Model):
         ordering = ('name',)
 
 
-class Measurement(models.Model):
-    """Модель единицы измерений."""
+# class Measurement(models.Model):
+#     """Модель единицы измерений."""
 
-    unit = models.CharField(
-        verbose_name='Единица измерения',
-        max_length=Config.MEASURE_UNIT_MAX_LENGTH,
-        # db_index=True,
-    )
+#     unit = models.CharField(
+#         verbose_name='Единица измерения',
+#         max_length=Config.MEASURE_UNIT_MAX_LENGTH,
+#         # db_index=True,
+#     )
 
-    def __str__(self):
-        return (f'unit: {self.unit[:Config.LENGTH_ON_STR]}')
+#     def __str__(self):
+#         return (f'unit: {self.unit[:Config.LENGTH_ON_STR]}')
 
-    class Meta:
-        verbose_name = 'Единица измерения'
-        verbose_name_plural = 'Единицы измерения'
-        ordering = ('unit',)
+#     class Meta:
+#         verbose_name = 'Единица измерения'
+#         verbose_name_plural = 'Единицы измерения'
+#         ordering = ('unit',)
 
 
 class Ingredient(models.Model):
@@ -124,12 +125,18 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Ингредиент',
         max_length=Config.INGREDIENT_NAME_MAX_LENGTH,
+        unique=True,
+        db_index=True,
     )
-    measurement_unit = models.ForeignKey(
-        Measurement,
-        on_delete=models.CASCADE,
+    measurement_unit = models.CharField(
         verbose_name='Единица измерения',
+        max_length=Config.MEASURE_UNIT_MAX_LENGTH,
     )
+    # measurement_unit = models.ForeignKey(
+    #     Measurement,
+    #     on_delete=models.CASCADE,
+    #     verbose_name='Единица измерения',
+    # )
 
     def __str__(self):
         return (
@@ -160,11 +167,11 @@ class Recipe(models.Model):
     name = models.CharField(
         verbose_name='Название',
         max_length=Config.RECIPE_NAME_MAX_LENGTH,
+        unique=True,
     )
     image = models.ImageField(
-        upload_to='recipes/images/',
-        null=True,
-        blank=True,
+        upload_to='recipes/',
+        verbose_name='Изображение',
     )
     text = models.TextField(verbose_name='Описание')
     ingredients = models.ManyToManyField(
@@ -187,11 +194,11 @@ class Recipe(models.Model):
             ),
         ),
     )
-    short_link = models.SlugField(
-        verbose_name='Прямая ссылка',
-        max_length=Config.SHORT_LINK_LENGTH,
-        unique=True,
-    )
+    # short_link = models.SlugField(
+    #     verbose_name='Прямая ссылка',
+    #     max_length=Config.SHORT_LINK_LENGTH,
+    #     unique=True,
+    # )
 
     def __str__(self):
         return (
@@ -203,7 +210,7 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         default_related_name = 'recipes'
-        ordering = ('pub_date', 'name')
+        ordering = ('-pub_date', 'name')
 
 
 class RecipeIngredient(models.Model):
@@ -216,6 +223,15 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE
     )
     amount = models.PositiveSmallIntegerField()
+
+    class Meta:
+        default_related_name = 'recipeingredients'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('recipe', 'ingredient'),
+                name='unique_recipe_ingredient'
+            ),
+        )
 
 
 # class Subscription(models.Model):

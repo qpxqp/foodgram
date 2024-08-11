@@ -10,22 +10,14 @@ from rest_framework.response import Response
 from recipies.config import Config
 from .permissions import AdminOrReadOnly
 from .serializers import (
-    GetShortLinkRecipeSerializer, GetRecipeSerializer,
+    RecipeGetSerializer,
     IngredientSerializer, RecipeSerializer, SubscribeSerializer,
     SubscriptionsSerializer, TagSerializer,
     UserAvatarSerializer, UserSerializer,
+    ShortLinkRecipeSerializer
 )
 from recipies.models import Ingredient, Recipe, Subscription, Tag, User
 
-
-# class UsersViewSet(viewsets.ModelViewSet):
-#     """Пользователи."""
-
-#     serializer_class = UserSerializer
-#     queryset = User.objects.all()
-#     # lookup_field = 'username'
-#     permission_classes = (AllowAny,)
-#     # permission_classes = (IsAdmin,)
 
 class FoodgramUserViewSet(UserViewSet):
 
@@ -98,26 +90,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
-    # permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
     # pagination_class = None
 
     def get_serializer_class(self):
+        # print(self.action)
+        if self.action == 'short_link':
+            return ShortLinkRecipeSerializer
         if self.action in ('list', 'retrieve'):
-            return GetRecipeSerializer
-        return RecipeSerializer
+            return RecipeGetSerializer
+        return super().get_serializer_class()
 
     def get_permissions(self):
         # print(self.action)
-        if self.action in ('list', 'retrieve'):
+        if self.action in ('list', 'retrieve', 'short_link'):
             self.permission_classes = (permissions.AllowAny,)
         return super().get_permissions()
 
-    # def list(self, request, *args, **kwargs):
-    #     queryset = 
-    #     return super().list(request, *args, **kwargs)
-
-    # def create(self, request, *args, **kwargs):
-    #     return super().create(request, *args, **kwargs)
+    @action(['get'], detail=True,
+            serializer_class=ShortLinkRecipeSerializer,
+            url_path='get-link',
+            queryset=Recipe.objects.all(),
+            )
+    def short_link(self, request, pk=None):
+        serializer = self.get_serializer(
+            get_object_or_404(Recipe, pk=pk),
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -137,14 +138,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().perform_update(serializer)
 
 
-class ShortLinkRecipeViewSet(mixins.RetrieveModelMixin,
-                             viewsets.GenericViewSet):
-
-    serializer_class = GetShortLinkRecipeSerializer
-    queryset = Recipe.objects.all()
-
-
 class ShortLinkRecipeDetail(RetrieveAPIView):
 
-    serializer_class = GetShortLinkRecipeSerializer
+    serializer_class = RecipeGetSerializer
     queryset = Recipe.objects.all()
+    permission_classes = (permissions.AllowAny,)

@@ -200,7 +200,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class GetRecipeSerializer(serializers.ModelSerializer):
+class RecipeGetSerializer(serializers.ModelSerializer):
     """Вернуть рецепт в таком виде."""
 
     ingredients = RecipeIngredientSerializer(
@@ -241,13 +241,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = (
             'ingredients', 'tags', 'author',
-            # 'is_favorited', 'is_in_shopping_cart',
+            # 'is_favorited',
+            # 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
         read_only_fields = ('author',)
 
     def to_representation(self, recipe):
-        return GetRecipeSerializer(recipe).data
+        return RecipeGetSerializer(recipe).data
 
     def recipe_tags_and_ingredients_update_or_create(
         self, validated_data, recipe=None
@@ -297,135 +298,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         return ingredients
 
 
-
-
-
-class GetShortLinkRecipeSerializer(serializers.HyperlinkedModelSerializer):
+class ShortLinkRecipeSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Recipe
         extra_kwargs = {
-            # 'short-link': {'view_name': 'api:shortlink-detail'},
             'short-link': {'view_name': 'shortlink'},
         }
         fields = ('short-link',)
         read_only_fields = fields
-
-
-
-'''
-class RecipeIngredientListSerializer(serializers.ModelSerializer):
-
-    id = serializers.ReadOnlyField(
-        source='ingredient.id',
-    )
-    name = serializers.ReadOnlyField(
-        source='ingredient.name',
-    )
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit',
-    )
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
-class GetRecipeListSerializer(serializers.ModelSerializer):
-
-    ingredients = RecipeIngredientListSerializer(
-        many=True,
-        source='recipeingredients',
-        read_only=True,
-    )
-    tags = TagSerializer(many=True)
-    author = UserSerializer()
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id', 'tags', 'author', 'ingredients',
-            # 'is_favorited', 'is_in_shopping_cart',
-            'name', 'image', 'text', 'cooking_time'
-        )
-        read_only_fields = fields
-
-
-class RecipeSerializer(serializers.ModelSerializer):
-
-    ingredients = RecipeIngredientSerializer(many=True)
-    tags = TagSerializer(many=True)
-    author = UserSerializer(
-        read_only=True,
-        default=serializers.CurrentUserDefault()
-    )
-    image = Base64ImageField()
-    cooking_time = serializers.IntegerField(
-        min_value=Config.RECIPE_MIN_COOKING_TIME
-    )
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id', 'tags', 'author', 'ingredients',
-            # 'is_favorited',
-            # 'is_in_shopping_cart',
-            'name', 'image', 'text', 'cooking_time',
-        )
-        read_only_fields = ('author',)
-
-    # def to_representation(self, recipe):
-    #     return GetRecipeSerializer(recipe).data
-
-    # def create(self, validated_data):
-    #     return super().create(validated_data)
-
-    def recipe_tags_and_ingredients_update_or_create(
-        self, validated_data, recipe=None
-    ) -> Recipe:
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        if recipe:
-            recipe.tags.clear()
-            recipe.ingredients.clear()
-        else:
-            recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
-        [RecipeIngredient.objects.update_or_create(
-            recipe=recipe,
-            ingredient=ingredient['id'],
-            amount=ingredient['amount']
-        ) for ingredient in ingredients]
-        return recipe
-
-    def create(self, validated_data):
-        recipe = self.recipe_tags_and_ingredients_update_or_create(
-            validated_data=validated_data
-        )
-        return recipe
-
-    def update(self, instance, validated_data):
-        recipe = self.recipe_tags_and_ingredients_update_or_create(
-            validated_data=validated_data,
-            instance=instance
-        )
-        return super().update(recipe, validated_data)
-
-    def value_validator(self, name: str, value: list) -> None:
-        """Проверяет список на наличие значений и их уникальность."""
-        if not value:
-            raise ValidationError(Config.FIELD_EMPTY_ERROR.format(name))
-        if len(value) != len(set(value)):
-            raise ValidationError(Config.FIELDS_UNIQUE_ERROR.format(name))
-
-    def validate_tags(self, tags):
-        self.value_validator('tags', tags)
-        return tags
-
-    def validate_ingredients(self, ingredients):
-        self.value_validator('ingredients',
-                             [ingredient['id'] for ingredient in ingredients])
-        return ingredients
-
-'''

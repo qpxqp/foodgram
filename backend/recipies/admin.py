@@ -24,3 +24,5 @@ class IngredientAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('pub_date', 'author', 'name', 'image', 'text',
                     'cooking_time')
+
+# ПРОВЕРИТЬ ВСЕ ЛИ НЕОБХОДИМЫЕ ПОЛЯ СОГЛАСНО МОДЕЛЯМ

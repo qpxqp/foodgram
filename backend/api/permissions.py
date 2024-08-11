@@ -21,12 +21,12 @@ class AdminOrReadOnly(IsAdmin, permissions.BasePermission):
         )
 
 
-class IsUsersPathOrIsAuthenticated(permissions.BasePermission):
-    """
-    Полный доступ к /users/
-    Атутентифицированный достум к /users/me/
-    """
-    def has_permission(self, request, view):
-        if settings.USER_ACCOUNT_URL not in request.path:
-            return True
-        return request.user.is_authenticated
+# class IsUsersPathOrIsAuthenticated(permissions.BasePermission):
+#     """
+#     Полный доступ к /users/
+#     Атутентифицированный достум к /users/me/
+#     """
+#     def has_permission(self, request, view):
+#         if settings.USER_ACCOUNT_URL not in request.path:
+#             return True
+#         return request.user.is_authenticated

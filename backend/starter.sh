@@ -6,9 +6,15 @@ python manage.py migrate
 
 echo "Create superuser and users..."
 python manage.py shell -c "from django.contrib.auth import get_user_model; UserModel = get_user_model(); UserModel.objects.create_superuser(first_name='admin', last_name='admin', username='admin', email='admin@r.ru', password='DjangoAdmin')"
-python manage.py shell -c "from django.contrib.auth import get_user_model; UserModel = get_user_model(); UserModel.objects.create_user(first_name='user', last_name='user', username='user', email='user@r.ru', password='DjangoUser')"
-python manage.py shell -c "from django.contrib.auth import get_user_model; UserModel = get_user_model(); UserModel.objects.create_user(first_name='user1', last_name='user1', username='user1', email='user1@r.ru', password='DjangoUser')"
-python manage.py shell -c "from django.contrib.auth import get_user_model; UserModel = get_user_model(); UserModel.objects.create_user(first_name='user2', last_name='user2', username='user2', email='user2@r.ru', password='DjangoUser')"
+python manage.py shell -c "from django.contrib.auth import get_user_model; UserModel = get_user_model(); \
+  UserModel.objects.create_user(first_name='user', last_name='user', username='user', email='user@r.ru', password='DjangoUser'); \
+  UserModel.objects.create_user(first_name='user3', last_name='user3', username='user3', email='user3@r.ru', password='DjangoUser'); \
+  UserModel.objects.create_user(first_name='user4', last_name='user4', username='user4', email='user4@r.ru', password='DjangoUser'); \
+  UserModel.objects.create_user(first_name='user5', last_name='user5', username='user5', email='user5@r.ru', password='DjangoUser'); \
+  UserModel.objects.create_user(first_name='user6', last_name='user6', username='user6', email='user6@r.ru', password='DjangoUser'); \
+  UserModel.objects.create_user(first_name='user7', last_name='user7', username='user7', email='user7@r.ru', password='DjangoUser'); \
+  UserModel.objects.create_user(first_name='user8', last_name='user8', username='user8', email='user8@r.ru', password='DjangoUser') \
+"
 
 echo "Create Tags..."
 python manage.py shell -c "from recipies.models import Tag; Tag.objects.bulk_create([ \

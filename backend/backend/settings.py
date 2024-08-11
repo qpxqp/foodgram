@@ -141,6 +141,7 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PAGINATION_CLASS': 'api.paginations.DefaultPagination',
     'PAGE_SIZE': 10,
+    'URL_FIELD_NAME': 'short-link',
 }
 
 DJOSER = {
@@ -152,7 +153,8 @@ DJOSER = {
         'current_user': 'api.serializers.UserSerializer',
     },
     'PERMISSIONS': {
-        'user': ('api.permissions.IsUsersPathOrIsAuthenticated',),
+        # 'user': ('api.permissions.IsUsersPathOrIsAuthenticated',),
+        # 'current_user': ('rest_framework.permissions.AllowAny',),
         'user_list': ('rest_framework.permissions.AllowAny',),
     },
 }

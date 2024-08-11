@@ -38,19 +38,19 @@ class FoodgramUser(AbstractUser):
     )
     avatar = models.ImageField(
         verbose_name='Аватарка',
-        upload_to='avatars/',
+        upload_to='users/',
         blank=True,
         null=True,
         default=None,
     )
-    # subscriptions = models.ManyToManyField(
-    #     'self',
-    #     # verbose_name='Подписчик',
-    #     through='Subscription',
-    #     through_fields=('subscriber', 'author'),
-    #     symmetrical=False,
-    #     related_name='subscribers',
-    # )
+    subscriptions = models.ManyToManyField(
+        'self',
+        verbose_name='Подписка',
+        through='Subscription',
+        through_fields=('subscriber', 'author'),
+        symmetrical=False,
+        related_name='subscribers',
+    )
 
     @property
     def is_admin(self):
@@ -74,6 +74,33 @@ class FoodgramUser(AbstractUser):
 
 
 User = get_user_model()
+
+
+class Subscription(models.Model):
+    """Модель подписок."""
+
+    subscriber = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',  # кто подписан
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',  # на кого подписан
+    )
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields=('subscriber', 'author'),
+                name='unique_user_following',
+            ),
+            models.CheckConstraint(
+                check=~models.Q(author=models.F('subscriber')),
+                name='dont_subscribe_to_yourself',
+            ),
+        )
 
 
 class Tag(models.Model):
@@ -101,24 +128,6 @@ class Tag(models.Model):
         ordering = ('name',)
 
 
-# class Measurement(models.Model):
-#     """Модель единицы измерений."""
-
-#     unit = models.CharField(
-#         verbose_name='Единица измерения',
-#         max_length=Config.MEASURE_UNIT_MAX_LENGTH,
-#         # db_index=True,
-#     )
-
-#     def __str__(self):
-#         return (f'unit: {self.unit[:Config.LENGTH_ON_STR]}')
-
-#     class Meta:
-#         verbose_name = 'Единица измерения'
-#         verbose_name_plural = 'Единицы измерения'
-#         ordering = ('unit',)
-
-
 class Ingredient(models.Model):
     """Модель ингредиента."""
 
@@ -132,11 +141,6 @@ class Ingredient(models.Model):
         verbose_name='Единица измерения',
         max_length=Config.MEASURE_UNIT_MAX_LENGTH,
     )
-    # measurement_unit = models.ForeignKey(
-    #     Measurement,
-    #     on_delete=models.CASCADE,
-    #     verbose_name='Единица измерения',
-    # )
 
     def __str__(self):
         return (
@@ -170,7 +174,7 @@ class Recipe(models.Model):
         unique=True,
     )
     image = models.ImageField(
-        upload_to='recipes/',
+        upload_to='recipes/images/',
         verbose_name='Изображение',
     )
     text = models.TextField(verbose_name='Описание')
@@ -223,6 +227,7 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE
     )
     amount = models.PositiveSmallIntegerField()
+    # ДОБАВИТЬ MinValueValidator !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     class Meta:
         default_related_name = 'recipeingredients'
@@ -232,30 +237,3 @@ class RecipeIngredient(models.Model):
                 name='unique_recipe_ingredient'
             ),
         )
-
-
-# class Subscription(models.Model):
-#     """Модель подписок."""
-
-#     subscriber = models.ForeignKey(
-#         User,
-#         on_delete=models.CASCADE,
-#         related_name='follower',  # кто подписан
-#     )
-#     author = models.ForeignKey(
-#         User,
-#         on_delete=models.CASCADE,
-#         related_name='following',  # на кого подписан
-#     )
-
-#     class Meta:
-#         constraints = (
-#             models.UniqueConstraint(
-#                 fields=('user', 'following'),
-#                 name='unique_user_following',
-#             ),
-#             models.CheckConstraint(
-#                 check=~models.Q(following=models.F('user')),
-#                 name='dont_follow_yourself',
-#             ),
-#         )

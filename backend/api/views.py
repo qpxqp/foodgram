@@ -1,16 +1,21 @@
 from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet
 from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError, PermissionDenied, MethodNotAllowed
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.generics import RetrieveAPIView
+from rest_framework import permissions
 from rest_framework.response import Response
 
 from recipies.config import Config
 from .permissions import AdminOrReadOnly
 from .serializers import (
-    IngredientSerializer, RecipeSerializer, TagSerializer,
+    GetShortLinkRecipeSerializer, GetRecipeSerializer,
+    IngredientSerializer, RecipeSerializer, SubscribeSerializer,
+    SubscriptionsSerializer, TagSerializer,
     UserAvatarSerializer, UserSerializer,
 )
-from recipies.models import Ingredient, Recipe, Tag, User
+from recipies.models import Ingredient, Recipe, Subscription, Tag, User
 
 
 # class UsersViewSet(viewsets.ModelViewSet):
@@ -22,32 +27,55 @@ from recipies.models import Ingredient, Recipe, Tag, User
 #     permission_classes = (AllowAny,)
 #     # permission_classes = (IsAdmin,)
 
+class FoodgramUserViewSet(UserViewSet):
 
-class UserAvatarViewSet(mixins.UpdateModelMixin,
-                        mixins.DestroyModelMixin,
-                        viewsets.GenericViewSet):
+    def get_permissions(self):
+        if self.action == 'retrieve':
+            self.permission_classes = (permissions.AllowAny,)
+        elif self.action == 'subscribe':
+            self.permission_classes = (permissions.IsAuthenticated,)
+        return super().get_permissions()
 
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
-    lookup_field = 'username'
-
-    def update(self, request, *args, **kwargs):
-        if not request.data.get('avatar', None):
-            raise ValidationError({"avatar": "Обязательное поле."},
-                                  status.HTTP_400_BAD_REQUEST)
-        serializer = UserAvatarSerializer(
-            self.request.user, data=request.data, partial=True
-        )
+    @action(['put', 'delete'], detail=False, url_path='me/avatar',
+            serializer_class=UserAvatarSerializer)
+    def avatar(self, request):
+        user = request.user
+        if user.avatar:
+            user.avatar.delete()
+        if request.method == 'DELETE':
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
-    def destroy(self, request, pk=None):
-        user = self.request.user
-        if user.avatar:
-            user.avatar.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    @action(['get'], detail=False, serializer_class=SubscriptionsSerializer)
+    def subscriptions(self, request):
+        serializer = self.get_serializer(
+            User.objects.filter(following__subscriber=request.user),
+            many=True,
+        )
+        return Response(serializer.data)
+
+    @action(['post', 'delete'], detail=True,
+            serializer_class=SubscribeSerializer)
+    def subscribe(self, request, id=None):
+        subscriber = request.user
+        author = self.get_object()
+        if request.method == 'POST':
+            serializer = self.get_serializer(data={'author': author.username})
+            serializer.is_valid(raise_exception=True)
+            serializer.save(subscriber=subscriber)
+            return Response(serializer.data)
+        instance = Subscription.objects.filter(subscriber=subscriber,
+                                               author=author)
+        if not instance.exists():
+            raise ValidationError(Config.SUBSCRIPTION_NOT_EXISTS.format(
+                subscriber=subscriber.username,
+                author=author.username
+            ))
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -63,20 +91,26 @@ class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (AdminOrReadOnly,)
-    pagination_class = None  # без фильтров с пагинацией не работает поиск
+    # pagination_class = None  # без фильтров с пагинацией не работает поиск на сайте
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
 
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
-    permission_classes = (IsAuthenticated,)  # поправить
+    # permission_classes = (permissions.IsAuthenticated,)
     # pagination_class = None
 
     def get_serializer_class(self):
-        # if self.action == 'list':
-        #     return RecipeListSerializer
+        if self.action in ('list', 'retrieve'):
+            return GetRecipeSerializer
         return RecipeSerializer
+
+    def get_permissions(self):
+        # print(self.action)
+        if self.action in ('list', 'retrieve'):
+            self.permission_classes = (permissions.AllowAny,)
+        return super().get_permissions()
 
     # def list(self, request, *args, **kwargs):
     #     queryset = 
@@ -93,8 +127,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise MethodNotAllowed('PUT')
         return super().update(request, *args, **kwargs)
 
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
     def perform_update(self, serializer):
         if serializer.instance.author != self.request.user:
             raise PermissionDenied(Config.PERMISSION_DENIED)
         serializer.save(author=self.request.user)
         return super().perform_update(serializer)
+
+
+class ShortLinkRecipeViewSet(mixins.RetrieveModelMixin,
+                             viewsets.GenericViewSet):
+
+    serializer_class = GetShortLinkRecipeSerializer
+    queryset = Recipe.objects.all()
+
+
+class ShortLinkRecipeDetail(RetrieveAPIView):
+
+    serializer_class = GetShortLinkRecipeSerializer
+    queryset = Recipe.objects.all()

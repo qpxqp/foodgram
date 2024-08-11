@@ -26,8 +26,9 @@ class Config:
 
     RECIPE_NAME_MAX_LENGTH = 256
     RECIPE_MIN_COOKING_TIME = 1
-    SHORT_LINK_PREFIX = 'recipe'
-    SHORT_LINK_LENGTH = 8 + len(SHORT_LINK_PREFIX)
+    INGREDIENT_MIN_AMOUNT = 1
+    SHORT_LINK_PREFIX = 'recipe'                    # что это !!!!!!!!!!!!!!
+    SHORT_LINK_LENGTH = 8 + len(SHORT_LINK_PREFIX)  # ЧТО ЭТО !!!!!!!!!!!!!!
 
     # Сообщения об ошибках
     USERNAME_ERROR = (
@@ -40,5 +41,9 @@ class Config:
     PERMISSION_DENIED = 'Недостаточно прав для выполнения действия.'
     FIELD_EMPTY_ERROR = 'Поле {} должно быть заполнено.'
     FIELDS_UNIQUE_ERROR = 'Элементы поля {} должны быть уникальными.'
+    SUBSCRIPTION_ERROR = 'Вы не может подписаться на себя.'
+    SUBSCRIPTION_NOT_EXISTS = (
+        'Пользователь {subscriber} не подписан на автора {author}.'
+    )
     # USERNAME_OR_EMAIL_EXIST = 'Значение {} уже занято.'
     # USER_DELETED = 'Пользователь {user} удален.'

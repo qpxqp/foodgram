@@ -84,7 +84,8 @@ class RecipeSmallSerializer(serializers.ModelSerializer):
 class UserRecipesSerializer(UserSerializer):
     """Пользователь и его рецепты в упрощенном виде."""
 
-    recipes = RecipeSmallSerializer(many=True)
+    # recipes = RecipeSmallSerializer(many=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -95,7 +96,22 @@ class UserRecipesSerializer(UserSerializer):
         )
         read_only_fields = fields
 
+    def get_recipes(self, author):
+        """Возвращает все/частично рецепты пользователя."""
+        recipes_limit = (
+            int(self.context['request'].GET['recipes_limit'])
+            if self.context.get('request')
+            and self.context['request'].GET.get('recipes_limit') else
+            None
+        )
+        if recipes_limit is not None:
+            queryset = Recipe.objects.filter(author=author)[:recipes_limit]
+        else:
+            queryset = Recipe.objects.filter(author=author)
+        return RecipeSmallSerializer(queryset, many=True).data
+
     def get_recipes_count(self, author):
+        """Возвращает количество рецептов пользователя."""
         return Recipe.objects.filter(author=author).count()
 
 

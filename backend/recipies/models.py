@@ -93,8 +93,10 @@ class Subscription(models.Model):
     )
 
     def __str__(self):
-        return (f'subscriber: {self.subscriber.username[:Config.LENGTH_ON_STR]}, '
-                f'author: {self.author.username[:Config.LENGTH_ON_STR]}')
+        return (
+            f'subscriber: {self.subscriber.username[:Config.LENGTH_ON_STR]}, '
+            f'author: {self.author.username[:Config.LENGTH_ON_STR]}'
+        )
 
     class Meta:
         verbose_name = 'Подписка'

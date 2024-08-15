@@ -31,7 +31,11 @@ class IsSubscribedMixin(serializers.Serializer):
     is_subscribed = serializers.SerializerMethodField()
 
     def get_is_subscribed(self, author):
-        user = self.context['request'].user if self.context.get('request') else None
+        user = (
+            self.context['request'].user
+            if self.context.get('request') else
+            None
+        )
         # print(user, author)
         if user and not user.is_authenticated:
             return False
@@ -222,12 +226,20 @@ class IsFavoritedIsInShoppingCartMixin(serializers.Serializer):
         ).exists())
 
     def get_is_favorited(self, recipe):
-        user = self.context['request'].user if self.context.get('request') else None
+        user = (
+            self.context['request'].user
+            if self.context.get('request') else
+            None
+        )
         # print(user, recipe)
         return self.check_exists(user, recipe, Favorite)
 
     def get_is_in_shopping_cart(self, recipe):
-        user = self.context['request'].user if self.context.get('request') else None
+        user = (
+            self.context['request'].user
+            if self.context.get('request') else
+            None
+        )
         # print(user, recipe)
         return self.check_exists(user, recipe, ShoppingCart)
 
@@ -325,7 +337,9 @@ class RecipeSerializer(IsFavoritedIsInShoppingCartMixin,
             if not attrs.get(attr, None)
         ]
         if error_fields:
-            raise ValidationError(Config.FIELD_EMPTY_ERROR.format(error_fields))
+            raise ValidationError(
+                Config.FIELD_EMPTY_ERROR.format(error_fields)
+            )
         return super().validate(attrs)
 
     def value_validator(self, name: str, value: list) -> None:

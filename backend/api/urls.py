@@ -1,10 +1,10 @@
 from django.conf import settings
-from django.urls import include, path, re_path
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from .views import (
-    FoodgramUserViewSet,
-    IngredientViewSet, TagViewSet, RecipeViewSet,
+    FoodgramUserViewSet, IngredientViewSet,
+    RecipeViewSet, TagViewSet,
 )
 
 app_name = 'api'
@@ -18,7 +18,7 @@ router_v1.register(r'recipes', RecipeViewSet, basename='recipes')
 
 auth_patterns = [
     path('auth/', include('djoser.urls.authtoken')),
-    # path('', include('djoser.urls')),  # !!!!!!!!!!!!!!!!!!!!!!!возможно не требуется, проверить тестами без этого урла
+    # path('', include('djoser.urls')),
 ]
 
 urlpatterns = [

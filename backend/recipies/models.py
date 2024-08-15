@@ -81,11 +81,13 @@ class Subscription(models.Model):
 
     subscriber = models.ForeignKey(
         User,
+        verbose_name='Подписчик',
         on_delete=models.CASCADE,
         related_name='follower',  # кто подписан
     )
     author = models.ForeignKey(
         User,
+        verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='following',  # на кого подписан
     )
@@ -95,6 +97,8 @@ class Subscription(models.Model):
                 f'author: {self.author.username[:Config.LENGTH_ON_STR]}')
 
     class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
         constraints = (
             models.UniqueConstraint(
                 fields=('subscriber', 'author'),
@@ -175,6 +179,7 @@ class Recipe(models.Model):
     name = models.CharField(
         verbose_name='Название',
         max_length=Config.RECIPE_NAME_MAX_LENGTH,
+        db_index=True,
     )
     image = models.ImageField(
         upload_to='recipes/images/',
@@ -221,15 +226,20 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
+    """Рецепт-ингредиент."""
+
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
     )
     ingredient = models.ForeignKey(
         Ingredient,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(
+        verbose_name='Количество',
         validators=(
             MinValueValidator(
                 Config.INGREDIENT_MIN_AMOUNT,
@@ -248,6 +258,8 @@ class RecipeIngredient(models.Model):
         )
 
     class Meta:
+        verbose_name = 'Рецепт-ингредиенты'
+        verbose_name_plural = 'Рецепты-ингредиенты'
         default_related_name = 'recipeingredients'
         constraints = (
             models.UniqueConstraint(
@@ -259,6 +271,7 @@ class RecipeIngredient(models.Model):
 
 class Favorite(models.Model):
     """Модель избранных рецептов."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -277,6 +290,8 @@ class Favorite(models.Model):
         )
 
     class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
         constraints = (
             models.UniqueConstraint(
@@ -287,7 +302,8 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """Модель избранных рецептов."""
+    """Модель покупок."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -306,6 +322,8 @@ class ShoppingCart(models.Model):
         )
 
     class Meta:
+        verbose_name = 'Покупка'
+        verbose_name_plural = 'Покупки'
         default_related_name = 'shoppingcarts'
         constraints = (
             models.UniqueConstraint(

@@ -1,34 +1,31 @@
 from django.conf import settings
 from django.http import HttpResponse
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.timezone import localtime, now
 
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-
-from rest_framework import mixins, viewsets, permissions, status
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError, PermissionDenied, MethodNotAllowed
+from rest_framework.exceptions import (MethodNotAllowed, PermissionDenied,
+                                       ValidationError)
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
+from .filters import IngredientFilter, RecipeFilter
 from .permissions import ReadOnlyOrIsAuthorOrIsAdmin
 from .serializers import (
-    FavoriteSerializer, RecipeGetSerializer,
-    IngredientSerializer, RecipeSerializer, SubscribeSerializer,
-    SubscriptionsSerializer, TagSerializer,
-    UserAvatarSerializer, ShortLinkRecipeSerializer,
-    ShoppingCartSerializer,
+    FavoriteSerializer, IngredientSerializer, RecipeGetSerializer,
+    RecipeSerializer, ShoppingCartSerializer, ShortLinkRecipeSerializer,
+    SubscribeSerializer, SubscriptionsSerializer, TagSerializer,
+    UserAvatarSerializer,
 )
-
-from .paginations import DefaultPagination
-from .filters import IngredientFilter, RecipeFilter
 from .utils import shopping_cart
 from recipies.config import Config
 from recipies.models import (
-    Favorite, Ingredient, Recipe, ShoppingCart,
-    Subscription, Tag, User
+    Favorite, Ingredient, Recipe,
+    ShoppingCart, Subscription, Tag, User
 )
 
 
@@ -56,18 +53,6 @@ class FoodgramUserViewSet(UserViewSet):
 
     @action(['get'], detail=False, serializer_class=SubscriptionsSerializer)
     def subscriptions(self, request):
-        # queryset = self.filter_queryset(self.get_queryset())
-        # page = self.paginate_queryset(queryset)
-        # if page is not None:
-        #     serializer = self.get_serializer(
-        #         User.objects.filter(following__subscriber=request.user),
-        #         many=True,
-        #     )
-        #     return self.get_paginated_response(serializer.data)
-
-        # page = self.paginate_queryset(
-        #     User.objects.filter(following__subscriber=request.user),
-        # )
         serializer = self.get_serializer(
             self.paginate_queryset(
                 User.objects.filter(following__subscriber=request.user),
@@ -75,12 +60,6 @@ class FoodgramUserViewSet(UserViewSet):
             many=True,
         )
         return self.get_paginated_response(serializer.data)
-        # БЕЗ ПАГИНАЦИИ
-        # serializer = self.get_serializer(
-        #     User.objects.filter(following__subscriber=request.user),
-        #     many=True,
-        # )
-        # return Response(serializer.data)
 
     @action(['post', 'delete'], detail=True,
             serializer_class=SubscribeSerializer)
@@ -144,21 +123,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return ShoppingCartSerializer
         if self.action in ('list', 'retrieve'):
             return RecipeGetSerializer
-        # return RecipeSerializer
         return super().get_serializer_class()
-
-    # def list(self, request, *args, **kwargs):
-    #     queryset = self.filter_queryset(self.get_queryset())
-    #     serializer = RecipeGetSerializer(queryset, data=request.data, many=True *args, **kwargs)
-    #     serializer.is_valid(raise_exception=True)
-    #     # print()        
-    #     return Response(serializer.data)
-
-    # def get_permissions(self):
-    #     # print(self.action)
-    #     if self.action in ('list', 'retrieve', 'short_link'):
-    #         self.permission_classes = (permissions.AllowAny,)
-    #     return super().get_permissions()
 
     @action(['get'], detail=True, url_path='get-link',
             permission_classes=(permissions.AllowAny,))
@@ -243,22 +208,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise MethodNotAllowed('PUT')
         return super().update(request, *args, **kwargs)
 
-    # def patch(self, request, *args, **kwargs):
-    #     return self.partial_update(request, *args, **kwargs)
-
     def perform_update(self, serializer):
         serializer.is_valid(raise_exception=True)
         if serializer.instance.author != self.request.user:
             raise PermissionDenied(Config.PERMISSION_DENIED)
         serializer.save(author=self.request.user)
         return super().perform_update(serializer)
-
-
-# class ShortLinkRecipeDetail(RetrieveAPIView):
-
-#     serializer_class = RecipeGetSerializer
-#     queryset = Recipe.objects.all()
-#     permission_classes = (permissions.AllowAny,)
 
 
 class ShortLinkRecipeDetail(RetrieveAPIView):
@@ -272,3 +227,10 @@ class ShortLinkRecipeDetail(RetrieveAPIView):
             request.build_absolute_uri(f'/recipes/{pk}'),
             permanent=True,
         )
+
+
+# class ShortLinkRecipeDetail(RetrieveAPIView):
+
+#     serializer_class = RecipeGetSerializer
+#     queryset = Recipe.objects.all()
+#     permission_classes = (permissions.AllowAny,)

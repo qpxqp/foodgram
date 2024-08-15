@@ -1,7 +1,6 @@
 import base64
 
 from django.core.files.base import ContentFile
-
 from djoser.serializers import (
     UserCreateSerializer as BaseUserCreateSerializer,
     UserSerializer as BaseUserSerializer,
@@ -9,13 +8,11 @@ from djoser.serializers import (
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
-# from rest_framework.relations import SlugRelatedField
 
 from recipies.config import Config
 from recipies.models import (
-    Favorite,
-    Ingredient, Recipe, RecipeIngredient, Subscription, ShoppingCart,
-    Tag, User,
+    Favorite, Ingredient, Recipe, RecipeIngredient,
+    ShoppingCart, Subscription, Tag, User
 )
 
 
@@ -176,14 +173,6 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
-# News.objects.bulk_create(
-#     News(title=NEWS_TITLE + f'{index}',
-#          text=NEWS_TEXT,
-#          date=datetime.today() - timedelta(days=index))
-#     for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
-# )
-
-
 class AddIngredientToRecipeSerializer(serializers.ModelSerializer):
     """Добавление ингредиента в рецепт."""
 
@@ -241,16 +230,6 @@ class IsFavoritedIsInShoppingCartMixin(serializers.Serializer):
         user = self.context['request'].user if self.context.get('request') else None
         # print(user, recipe)
         return self.check_exists(user, recipe, ShoppingCart)
-
-    # def get_is_favorited(self, recipe):
-    #     user = self.context['request'].user if self.context.get('request') else None
-    #     # print(user, recipe)
-    #     if user and not user.is_authenticated:
-    #         return False
-    #     return bool(Favorite.objects.filter(
-    #         user=user,
-    #         recipe=recipe,
-    #     ).exists())
 
 
 class RecipeGetSerializer(IsFavoritedIsInShoppingCartMixin,

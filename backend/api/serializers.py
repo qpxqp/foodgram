@@ -13,7 +13,9 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from recipies.config import Config
 from recipies.models import (
-    Ingredient, Recipe, RecipeIngredient, Subscription, Tag, User,
+    Favorite,
+    Ingredient, Recipe, RecipeIngredient, Subscription, ShoppingCart,
+    Tag, User,
 )
 
 
@@ -38,7 +40,7 @@ class IsSubscribedMixin(serializers.Serializer):
             return False
         return bool(Subscription.objects.filter(
             subscriber=user,
-            author=author
+            author=author,
         ).exists())
 
 
@@ -128,7 +130,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=model.objects.all(),
                 fields=('subscriber', 'author'),
-                message='Вы уже подписаны на автора.',
+                message=Config.ALREADY_SUBSCRIBED_ERROR,
             ),
         )
 
@@ -200,7 +202,43 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class RecipeGetSerializer(serializers.ModelSerializer):
+class IsFavoritedIsInShoppingCartMixin(serializers.Serializer):
+
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+
+    def check_exists(self, user, recipe, model) -> bool:
+        """Проверяет существование объекта."""
+        if user and not user.is_authenticated:
+            return False
+        return bool(model.objects.filter(
+            user=user,
+            recipe=recipe,
+        ).exists())
+
+    def get_is_favorited(self, recipe):
+        user = self.context['request'].user if self.context.get('request') else None
+        # print(user, recipe)
+        return self.check_exists(user, recipe, Favorite)
+
+    def get_is_in_shopping_cart(self, recipe):
+        user = self.context['request'].user if self.context.get('request') else None
+        # print(user, recipe)
+        return self.check_exists(user, recipe, ShoppingCart)
+
+    # def get_is_favorited(self, recipe):
+    #     user = self.context['request'].user if self.context.get('request') else None
+    #     # print(user, recipe)
+    #     if user and not user.is_authenticated:
+    #         return False
+    #     return bool(Favorite.objects.filter(
+    #         user=user,
+    #         recipe=recipe,
+    #     ).exists())
+
+
+class RecipeGetSerializer(IsFavoritedIsInShoppingCartMixin,
+                          serializers.ModelSerializer):
     """Вернуть рецепт в таком виде."""
 
     ingredients = RecipeIngredientSerializer(
@@ -216,13 +254,15 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = (
             'id', 'tags', 'author', 'ingredients',
-            # 'is_favorited', 'is_in_shopping_cart',
+            'is_favorited',
+            'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time'
         )
         read_only_fields = fields
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(IsFavoritedIsInShoppingCartMixin,
+                       serializers.ModelSerializer):
 
     ingredients = AddIngredientToRecipeSerializer(
         many=True,
@@ -236,13 +276,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault(),
     )
     image = Base64ImageField()
+    cooking_time = serializers.IntegerField(
+        min_value=Config.RECIPE_MIN_COOKING_TIME,
+    )
 
     class Meta:
         model = Recipe
         fields = (
             'ingredients', 'tags', 'author',
-            # 'is_favorited',
-            # 'is_in_shopping_cart',
+            'is_favorited',
+            'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time',
         )
         read_only_fields = ('author',)
@@ -251,10 +294,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         return RecipeGetSerializer(recipe).data
 
     def recipe_tags_and_ingredients_update_or_create(
-        self, validated_data, recipe=None
+        self, validated_data, recipe=None,
     ) -> Recipe:
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags', None)
+        ingredients = validated_data.pop('ingredients', None)
         if recipe:
             recipe.tags.clear()
             recipe.ingredients.clear()
@@ -281,6 +324,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
         return super().update(recipe, validated_data)
 
+    def validate(self, attrs):
+        error_fields = [
+            attr for attr in ('tags', 'ingredients')
+            if not attrs.get(attr, None)
+        ]
+        if error_fields:
+            raise ValidationError(Config.FIELD_EMPTY_ERROR.format(error_fields))
+        return super().validate(attrs)
+
     def value_validator(self, name: str, value: list) -> None:
         """Проверяет список на наличие значений и их уникальность."""
         if not value:
@@ -299,6 +351,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class ShortLinkRecipeSerializer(serializers.HyperlinkedModelSerializer):
+    """Возвращает короткую ссылку на рецепт."""
 
     class Meta:
         model = Recipe
@@ -307,3 +360,65 @@ class ShortLinkRecipeSerializer(serializers.HyperlinkedModelSerializer):
         }
         fields = ('short-link',)
         read_only_fields = fields
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """Избранное."""
+
+    user = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault(),
+    )
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all(),
+    )
+
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+        validators = (
+            UniqueTogetherValidator(
+                queryset=model.objects.all(),
+                fields=('user', 'recipe'),
+                message=Config.FAVORITE_SHOPPINGCART_ERROR.format(
+                    listname='избранное',
+                ),
+            ),
+        )
+
+    def to_representation(self, instance):
+        return RecipeSmallSerializer(instance.recipe, context={
+            'request': self.context['request'],
+        }).data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    """Список покупок."""
+
+    user = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault(),
+    )
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all(),
+    )
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('user', 'recipe')
+        validators = (
+            UniqueTogetherValidator(
+                queryset=model.objects.all(),
+                fields=('user', 'recipe'),
+                message=Config.FAVORITE_SHOPPINGCART_ERROR.format(
+                    listname='список покупок',
+                ),
+            ),
+        )
+
+    def to_representation(self, instance):
+        return RecipeSmallSerializer(instance.recipe, context={
+            'request': self.context['request'],
+        }).data

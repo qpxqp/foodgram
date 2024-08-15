@@ -14,6 +14,8 @@ class Config:
         (UserRoles.ADMIN, 'Администратор'),
     )
 
+    SHOPPING_CART_FILE_NAME = 'foodgram_shopping_cart_{datetime}.txt'
+
     # Настройки моделей
     USERNAME_MAX_LENGTH = 150
     EMAIL_MAX_LENGTH = 254
@@ -37,13 +39,18 @@ class Config:
         'символы: {wrong_symbols}.'
     )
     USERNAME_FAILED = 'Имя пользователя {username} недопустимо.'
-    COOKING_TIME_ERROR = 'Значение не может быть меньше {}.'
+    MIN_VALUE_ERROR = 'Значение не может быть меньше {}.'
     PERMISSION_DENIED = 'Недостаточно прав для выполнения действия.'
     FIELD_EMPTY_ERROR = 'Поле {} должно быть заполнено.'
     FIELDS_UNIQUE_ERROR = 'Элементы поля {} должны быть уникальными.'
     SUBSCRIPTION_ERROR = 'Вы не может подписаться на себя.'
     SUBSCRIPTION_NOT_EXISTS = (
         'Пользователь {subscriber} не подписан на автора {author}.'
+    )
+    ALREADY_SUBSCRIBED_ERROR = 'Вы уже подписаны на автора.'
+    FAVORITE_SHOPPINGCART_ERROR = 'Рецепт уже добавлен в {listname}.'
+    FAVORITE_SHOPPINGCART_NOT_EXISTS = (
+        'Рецепт с id={id} отвутствует в {listname} у пользователя {user}.'
     )
     # USERNAME_OR_EMAIL_EXIST = 'Значение {} уже занято.'
     # USER_DELETED = 'Пользователь {user} удален.'

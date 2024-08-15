@@ -56,3 +56,6 @@ printf %s "Create Ingredients from file: "  && \
 #   Ingredient(name='барбарис вяленый', measurement_unit='ст. л.'),\
 #   Ingredient(name='лаванда сушеная', measurement_unit='щепотка'),\
 # ])"
+
+# echo "Create Recipes..."
+sh sh_recipes.sh

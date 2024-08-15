@@ -90,6 +90,10 @@ class Subscription(models.Model):
         related_name='following',  # на кого подписан
     )
 
+    def __str__(self):
+        return (f'subscriber: {self.subscriber.username[:Config.LENGTH_ON_STR]}, '
+                f'author: {self.author.username[:Config.LENGTH_ON_STR]}')
+
     class Meta:
         constraints = (
             models.UniqueConstraint(
@@ -171,7 +175,6 @@ class Recipe(models.Model):
     name = models.CharField(
         verbose_name='Название',
         max_length=Config.RECIPE_NAME_MAX_LENGTH,
-        unique=True,
     )
     image = models.ImageField(
         upload_to='recipes/images/',
@@ -192,7 +195,7 @@ class Recipe(models.Model):
         validators=(
             MinValueValidator(
                 Config.RECIPE_MIN_COOKING_TIME,
-                Config.COOKING_TIME_ERROR.format(
+                Config.MIN_VALUE_ERROR.format(
                     Config.RECIPE_MIN_COOKING_TIME
                 ),
             ),
@@ -226,8 +229,23 @@ class RecipeIngredient(models.Model):
         Ingredient,
         on_delete=models.CASCADE
     )
-    amount = models.PositiveSmallIntegerField()
-    # ДОБАВИТЬ MinValueValidator !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    amount = models.PositiveSmallIntegerField(
+        validators=(
+            MinValueValidator(
+                Config.INGREDIENT_MIN_AMOUNT,
+                Config.MIN_VALUE_ERROR.format(
+                    Config.INGREDIENT_MIN_AMOUNT
+                ),
+            ),
+        ),
+    )
+
+    def __str__(self):
+        return (
+            f'recipe: {self.recipe.name[:Config.LENGTH_ON_STR]}, '
+            f'ingredient: {self.ingredient.name[:Config.LENGTH_ON_STR]}, '
+            f'amount: {self.amount}'
+        )
 
     class Meta:
         default_related_name = 'recipeingredients'
@@ -235,5 +253,63 @@ class RecipeIngredient(models.Model):
             models.UniqueConstraint(
                 fields=('recipe', 'ingredient'),
                 name='unique_recipe_ingredient'
+            ),
+        )
+
+
+class Favorite(models.Model):
+    """Модель избранных рецептов."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+    )
+
+    def __str__(self):
+        return (
+            f'user: {self.user.username[:Config.LENGTH_ON_STR]}, '
+            f'recipe: {self.recipe.name[:Config.LENGTH_ON_STR]}'
+        )
+
+    class Meta:
+        default_related_name = 'favorites'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_user_recipe_favorite'
+            ),
+        )
+
+
+class ShoppingCart(models.Model):
+    """Модель избранных рецептов."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+    )
+
+    def __str__(self):
+        return (
+            f'user: {self.user.username[:Config.LENGTH_ON_STR]}, '
+            f'recipe: {self.recipe.name[:Config.LENGTH_ON_STR]}'
+        )
+
+    class Meta:
+        default_related_name = 'shoppingcarts'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_user_recipe_shoppingcart'
             ),
         )

@@ -263,6 +263,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class ShortLinkRecipeDetail(RetrieveAPIView):
 
+    permission_classes = (permissions.AllowAny,)
+
     def get(self, request, pk=None):
         return redirect(
             reverse('api:recipes-detail', kwargs={'pk': pk}, request=request)

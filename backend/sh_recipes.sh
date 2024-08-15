@@ -18,7 +18,7 @@ Recipe.objects.bulk_create([
         text=f'Берём чистую кастрюлю...{get_action()}. Готово!',
         author=User.objects.get(id=randint(1, NUMBER_USER)),
         cooking_time=randint(1, 120),
-        image='recipes/images/temp.jpg'
+        image='recipes/images/temp.jpeg'
     ) for _ in range(1, NUMBER_RECIPE + 1)
 ])
 recipe_id = Recipe.objects.values_list('id', flat=True)

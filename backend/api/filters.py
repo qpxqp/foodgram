@@ -5,10 +5,12 @@ from recipies.models import Ingredient, Recipe, Tag, User
 
 
 class IngredientFilter(FilterSet):
+
     # Для тестов postman
-    name = filters.CharFilter(field_name='name', lookup_expr='istartswith')
+    # name = filters.CharFilter(field_name='name', lookup_expr='istartswith')
+
     # Двойная фильтрация ингредиентов
-    # name = filters.CharFilter(method='ingredient_filter')
+    name = filters.CharFilter(method='ingredient_filter')
 
     class Meta:
         model = Ingredient
@@ -24,28 +26,9 @@ class IngredientFilter(FilterSet):
             ),
         )
 
-        # q1 = Ingredient.objects.filter(Q(**{'name__istartswith': value}))
-        # q2 = Ingredient.objects.filter(Q(**{'name__icontains': value}))
-        # return q1.intersection(q2)
-
-        # priority_order = Case(
-        #     When(Q(**{'name__istartswith': value}), then=Value(1)),
-        #     When(Q(**{'name__icontains': value}), then=Value(2)),
-        # )
-        # return Ingredient.objects.alias(priority_order=priority_order).order_by('priority_order', 'name')
-
-        # return Ingredient.objects.filter(
-        #     Q(**{'name__istartswith': value}) | Q(**{'name__icontains': value})
-        # )
-
-        # return Ingredient.objects.filter(
-        #     Q(**{'name__istartswith': value})
-        # ).union(Ingredient.objects.filter(
-        #     Q(**{'name__icontains': value})
-        # ))
-
 
 class RecipeFilter(FilterSet):
+
     author = filters.ModelChoiceFilter(queryset=User.objects.all())
     tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',

@@ -1,5 +1,5 @@
 from django.db.models import Q, Case, Value, When
-from django_filters import FilterSet, filters
+from django_filters.rest_framework import FilterSet, filters
 
 from recipies.models import Ingredient, Recipe, Tag, User
 

@@ -1,19 +1,8 @@
-class UserRoles:
-    """Роли пользователей."""
-    USER = 'user'
-    ADMIN = 'admin'
-
-
 class Config:
     # Кол-во показываемых символов методом __str__()
     LENGTH_ON_STR = 15
 
-    # Перечень ролей пользователя и их представления
-    USER_ROLES_CHOICE = (
-        (UserRoles.USER, 'Аутентифицированный пользователь'),
-        (UserRoles.ADMIN, 'Администратор'),
-    )
-
+    USERNAME_PATTERN = r'[\w.@+-]+'
     SHOPPING_CART_FILE_NAME = 'foodgram_shopping_cart_{datetime}.txt'
 
     # Настройки моделей
@@ -29,8 +18,10 @@ class Config:
     RECIPE_NAME_MAX_LENGTH = 256
     RECIPE_MIN_COOKING_TIME = 1
     INGREDIENT_MIN_AMOUNT = 1
-    SHORT_LINK_PREFIX = 'recipe'                    # что это !!!!!!!!!!!!!!
-    SHORT_LINK_LENGTH = 8 + len(SHORT_LINK_PREFIX)  # ЧТО ЭТО !!!!!!!!!!!!!!
+
+    # Настройки пагинации
+    PAGE_SIZE_QUERY_PARAM = 'limit'
+    PAGE_SIZE = 6
 
     # Сообщения об ошибках
     USERNAME_ERROR = (
@@ -52,5 +43,6 @@ class Config:
     FAVORITE_SHOPPINGCART_NOT_EXISTS = (
         'Рецепт с id={id} отвутствует в {listname} у пользователя {user}.'
     )
+    DIGIT_ERROR = 'Поле {} должно содержать только цифры.'
     # USERNAME_OR_EMAIL_EXIST = 'Значение {} уже занято.'
     # USER_DELETED = 'Пользователь {user} удален.'

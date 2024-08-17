@@ -1,25 +1,29 @@
 from django.db.models import Sum
+from django.db.models.query import QuerySet
 
 from recipies.models import RecipeIngredient
 
 
-def shopping_cart(user):
+def get_shopping_cart_data(user) -> QuerySet:
     """Подготавливает данные для списка покупок."""
     ingredients = RecipeIngredient.objects.filter(
-        recipe__shoppingcarts__user=user,
+        recipe__shopping_carts__user=user,
     ).values(
         'ingredient__name',
         'ingredient__measurement_unit',
     ).annotate(
         amount=Sum('amount', distinct=True),
     ).order_by('ingredient__name')
-    if not ingredients:
-        return None
-    cart_data = f'FoodGram\n\nСписок покупок пользователя {user.username}:\n\n'
-    cart_data += '\n'.join(
+    return ingredients if ingredients else None
+
+
+def get_shopping_cart_text(username: str, cart_data: QuerySet) -> str:
+    """Подготавливает список покупок в текстовом виде."""
+    cart_text = f'FoodGram\n\nСписок покупок пользователя {username}:\n\n'
+    cart_text += '\n'.join(
         f'{index}. {ingredient["ingredient__name"]} - '
         f'{ingredient["amount"]} '
         f'{ingredient["ingredient__measurement_unit"]}\n'
-        for index, ingredient in enumerate(ingredients, start=1)
+        for index, ingredient in enumerate(cart_data, start=1)
     )
-    return cart_data
+    return cart_text

@@ -11,14 +11,13 @@ app_name = 'api'
 
 router_v1 = DefaultRouter() if settings.DEBUG else SimpleRouter()
 router_v1.register('users', FoodgramUserViewSet, basename='users')
-router_v1.register(r'tags', TagViewSet, basename='tags')
-router_v1.register(r'ingredients', IngredientViewSet, basename='ingredients')
-router_v1.register(r'recipes', RecipeViewSet, basename='recipes')
+router_v1.register('tags', TagViewSet, basename='tags')
+router_v1.register('ingredients', IngredientViewSet, basename='ingredients')
+router_v1.register('recipes', RecipeViewSet, basename='recipes')
 
 
 auth_patterns = [
     path('auth/', include('djoser.urls.authtoken')),
-    # path('', include('djoser.urls')),
 ]
 
 urlpatterns = [

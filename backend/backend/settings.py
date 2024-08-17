@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from recipies.config import Config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -144,7 +146,7 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_PAGINATION_CLASS': 'api.paginations.DefaultPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': Config.PAGE_SIZE,
     'URL_FIELD_NAME': 'short-link',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',

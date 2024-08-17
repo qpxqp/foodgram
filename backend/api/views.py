@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.timezone import localtime, now
 
@@ -21,7 +21,7 @@ from .serializers import (
     SubscribeSerializer, SubscriptionsSerializer, TagSerializer,
     UserAvatarSerializer,
 )
-from .utils import shopping_cart
+from api.utils import get_shopping_cart_data, get_shopping_cart_text
 from recipies.config import Config
 from recipies.models import (
     Favorite, Ingredient, Recipe,
@@ -108,7 +108,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    permission_classes = (ReadOnlyOrIsAuthorOrIsAdmin,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          ReadOnlyOrIsAuthorOrIsAdmin,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     # pagination_class = None
@@ -185,7 +186,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def download_shopping_cart(self, request):
         user = request.user
-        cart_data = shopping_cart(user)
+        cart_data = get_shopping_cart_data(user)
         if not cart_data:
             return Response(
                 {'detail': 'Список покупок пуст.'},
@@ -194,10 +195,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         file_name = Config.SHOPPING_CART_FILE_NAME.format(
             datetime=localtime(now()).strftime('%Y%m%d%H%M%S'),
         )
-        return HttpResponse(cart_data, headers={
-            'Content-Type': 'text/plain',
-            'Content-Disposition': f'attachment; filename="{file_name}"',
-        })
+        cart_text = get_shopping_cart_text(user.username, cart_data)
+        return FileResponse(
+            cart_text,
+            content_type='text/plain',
+            filename=file_name,
+            as_attachment=True,
+        )
 
     def perform_create(self, serializer):
         serializer.is_valid(raise_exception=True)

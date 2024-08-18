@@ -1,30 +1,13 @@
-import re
-
-from djoser.serializers import (
-    UserCreateSerializer as BaseUserCreateSerializer,
-    UserSerializer as BaseUserSerializer,
-)
+from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
+from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipies.config import Config
-from recipies.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient,
-    ShoppingCart, Subscription, Tag, User
-)
-
-# import base64
-# from django.core.files.base import ContentFile
-# class Base64ImageField(serializers.ImageField):
-
-#     def to_internal_value(self, data):
-#         if isinstance(data, str) and data.startswith('data:image'):
-#             format, imgstr = data.split(';base64,')
-#             ext = format.split('/')[-1]
-#             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-#         return super().to_internal_value(data)
+from recipies.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                             ShoppingCart, Subscription, Tag, User)
 
 
 class IsSubscribedMixin(serializers.Serializer):
@@ -288,25 +271,19 @@ class RecipeSerializer(IsFavoritedIsInShoppingCartSerializer,
     def recipe_tags_and_ingredients_update_or_create(
         self, recipe, tags, ingredients,
     ) -> Recipe:
-        # tags = validated_data.pop('tags', None)
-        # ingredients = validated_data.pop('ingredients', None)
-        # if recipe:
-        #     recipe.tags.clear()
-        #     recipe.ingredients.clear()
-        # else:
-        #     recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         [RecipeIngredient.objects.update_or_create(
             recipe=recipe,
             ingredient=ingredient['id'],
-            amount=ingredient['amount']
+            amount=ingredient['amount'],
         ) for ingredient in ingredients]
         return recipe
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(**validated_data,
+                                       author=self.context['request'].user)
         recipe = self.recipe_tags_and_ingredients_update_or_create(
             recipe=recipe,
             tags=tags,

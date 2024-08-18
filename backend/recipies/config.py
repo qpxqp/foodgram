@@ -44,5 +44,3 @@ class Config:
         'Рецепт с id={id} отвутствует в {listname} у пользователя {user}.'
     )
     DIGIT_ERROR = 'Поле {} должно содержать только цифры.'
-    # USERNAME_OR_EMAIL_EXIST = 'Значение {} уже занято.'
-    # USER_DELETED = 'Пользователь {user} удален.'

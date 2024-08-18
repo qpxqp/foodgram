@@ -1,12 +1,8 @@
-from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from rest_framework.exceptions import ValidationError
 
-from recipies.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient,
-    ShoppingCart, Subscription, Tag, User
-)
+from recipies.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                             ShoppingCart, Subscription, Tag, User)
 
 # Дополнительные поля в админку пользователя
 ADDITIONAL_USER_FIELDS = ('recipes', 'subscribers')

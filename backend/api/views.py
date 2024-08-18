@@ -2,31 +2,26 @@ from django.conf import settings
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.timezone import localtime, now
-
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import (MethodNotAllowed, PermissionDenied,
-                                       ValidationError)
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
-from .filters import IngredientFilter, RecipeFilter
-from .permissions import ReadOnlyOrIsAuthorOrIsAdmin
-from .serializers import (
-    FavoriteSerializer, IngredientSerializer, RecipeGetSerializer,
-    RecipeSerializer, ShoppingCartSerializer, ShortLinkRecipeSerializer,
-    SubscribeSerializer, SubscriptionsSerializer, TagSerializer,
-    UserAvatarSerializer,
-)
+from api.filters import IngredientFilter, RecipeFilter
+from api.permissions import ReadOnlyOrIsAuthorOrIsAdmin
+from api.serializers import (FavoriteSerializer, IngredientSerializer,
+                             RecipeGetSerializer, RecipeSerializer,
+                             ShoppingCartSerializer, ShortLinkRecipeSerializer,
+                             SubscribeSerializer, SubscriptionsSerializer,
+                             TagSerializer, UserAvatarSerializer)
 from api.utils import get_shopping_cart_data, get_shopping_cart_text
 from recipies.config import Config
-from recipies.models import (
-    Favorite, Ingredient, Recipe,
-    ShoppingCart, Subscription, Tag, User
-)
+from recipies.models import (Favorite, Ingredient, Recipe, ShoppingCart,
+                             Subscription, Tag, User)
 
 
 class FoodgramUserViewSet(UserViewSet):
@@ -112,10 +107,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
                           ReadOnlyOrIsAuthorOrIsAdmin,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    # pagination_class = None
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def get_permissions(self):
+        if self.action == 'update':
+            self.permission_classes = (ReadOnlyOrIsAuthorOrIsAdmin,)
+        return super().get_permissions()
 
     def get_serializer_class(self):
-        # print(self.action)
         if self.action == 'short_link':
             return ShortLinkRecipeSerializer
         if self.action == 'favorite':
@@ -136,22 +135,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
-    @action(['post', 'delete'], detail=True,
-            permission_classes=(permissions.IsAuthenticated,))
-    def favorite(self, request, pk=None):
-        user = request.user
-        recipe = self.get_object()
-        if request.method == 'POST':
-            serializer = self.get_serializer(data={'recipe': pk})
-            serializer.is_valid(raise_exception=True)
-            serializer.save(user=user, recipe=recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        instance = Favorite.objects.filter(user=user,
-                                           recipe=recipe)
+    @staticmethod
+    def favorite_and_shopping_cart_post(user, recipe, serializer) -> Response:
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=user, recipe=recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def favorite_and_shopping_cart_delete(user, recipe,
+                                          listname, instance) -> Response:
         if not instance.exists():
             raise ValidationError(
                 {'errors': Config.FAVORITE_SHOPPINGCART_NOT_EXISTS.format(
-                    listname='избранном',
+                    listname=listname,
                     id=recipe.id,
                     user=user.username,
                 )},
@@ -161,26 +157,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(['post', 'delete'], detail=True,
             permission_classes=(permissions.IsAuthenticated,))
+    def favorite(self, request, pk=None):
+        user = request.user
+        recipe = self.get_object()
+        if request.method == 'POST':
+            return self.favorite_and_shopping_cart_post(
+                user, recipe,
+                self.get_serializer(data={'recipe': pk})
+            )
+        return self.favorite_and_shopping_cart_delete(
+            user, recipe, 'избранном',
+            Favorite.objects.filter(user=user, recipe=recipe)
+        )
+
+    @action(['post', 'delete'], detail=True,
+            permission_classes=(permissions.IsAuthenticated,))
     def shopping_cart(self, request, pk=None):
         user = request.user
         recipe = self.get_object()
         if request.method == 'POST':
-            serializer = self.get_serializer(data={'recipe': pk})
-            serializer.is_valid(raise_exception=True)
-            serializer.save(user=user, recipe=recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        instance = ShoppingCart.objects.filter(user=user,
-                                               recipe=recipe)
-        if not instance.exists():
-            raise ValidationError(
-                {'errors': Config.FAVORITE_SHOPPINGCART_NOT_EXISTS.format(
-                    listname='списке покупок',
-                    id=recipe.id,
-                    user=user.username,
-                )},
+            return self.favorite_and_shopping_cart_post(
+                user, recipe,
+                self.get_serializer(data={'recipe': pk})
             )
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return self.favorite_and_shopping_cart_delete(
+            user, recipe, 'списке покупок',
+            ShoppingCart.objects.filter(user=user, recipe=recipe)
+        )
 
     @action(['get'], detail=False,
             permission_classes=(permissions.IsAuthenticated,))
@@ -203,22 +206,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             as_attachment=True,
         )
 
-    def perform_create(self, serializer):
-        serializer.is_valid(raise_exception=True)
-        serializer.save(author=self.request.user)
-
-    def update(self, request, *args, **kwargs):
-        if request.method in 'PUT':
-            raise MethodNotAllowed('PUT')
-        return super().update(request, *args, **kwargs)
-
-    def perform_update(self, serializer):
-        serializer.is_valid(raise_exception=True)
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied(Config.PERMISSION_DENIED)
-        serializer.save(author=self.request.user)
-        return super().perform_update(serializer)
-
 
 class ShortLinkRecipeDetail(RetrieveAPIView):
 
@@ -231,10 +218,3 @@ class ShortLinkRecipeDetail(RetrieveAPIView):
             request.build_absolute_uri(f'/recipes/{pk}'),
             permanent=True,
         )
-
-
-# class ShortLinkRecipeDetail(RetrieveAPIView):
-
-#     serializer_class = RecipeGetSerializer
-#     queryset = Recipe.objects.all()
-#     permission_classes = (permissions.AllowAny,)

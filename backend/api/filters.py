@@ -1,7 +1,7 @@
 from django.db.models import Case, Q, Value, When
 from django_filters.rest_framework import FilterSet, filters
 
-from recipies.models import Ingredient, Recipe, Tag, User
+from recipies.models import Ingredient, Recipe
 
 
 class IngredientFilter(FilterSet):

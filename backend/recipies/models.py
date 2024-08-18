@@ -4,8 +4,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from recipies.validators import username_validator
 from recipies.config import Config
+from recipies.validators import username_validator
 
 
 class FoodgramUser(AbstractUser):

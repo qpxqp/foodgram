@@ -2,10 +2,8 @@ from django.conf import settings
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
-from .views import (
-    FoodgramUserViewSet, IngredientViewSet,
-    RecipeViewSet, TagViewSet,
-)
+from .views import (FoodgramUserViewSet, IngredientViewSet, RecipeViewSet,
+                    TagViewSet)
 
 app_name = 'api'
 

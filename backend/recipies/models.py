@@ -1,15 +1,18 @@
-# from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from .validators import username_validator
-from recipies.config import Config, UserRoles
+from recipies.config import Config
+from recipies.validators import username_validator
 
 
 class FoodgramUser(AbstractUser):
     """Модель пользователя."""
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     username = models.CharField(
         verbose_name='Имя пользователя',
@@ -22,20 +25,6 @@ class FoodgramUser(AbstractUser):
         max_length=Config.EMAIL_MAX_LENGTH,
         unique=True,
     )
-    first_name = models.CharField(
-        verbose_name='Имя',
-        max_length=Config.FIRST_NAME_MAX_LENGTH,
-    )
-    last_name = models.CharField(
-        verbose_name='Фамилия',
-        max_length=Config.LAST_NAME_MAX_LENGTH,
-    )
-    role = models.CharField(
-        verbose_name='Роль',
-        max_length=max(len(role) for role, _ in Config.USER_ROLES_CHOICE),
-        choices=Config.USER_ROLES_CHOICE,
-        default=UserRoles.USER,
-    )
     avatar = models.ImageField(
         verbose_name='Аватарка',
         upload_to='users/',
@@ -43,34 +32,15 @@ class FoodgramUser(AbstractUser):
         null=True,
         default=None,
     )
-    subscriptions = models.ManyToManyField(
-        'self',
-        verbose_name='Подписка',
-        through='Subscription',
-        through_fields=('subscriber', 'author'),
-        symmetrical=False,
-        related_name='subscribers',
-    )
-
-    @property
-    def is_admin(self):
-        return (
-            self.role == UserRoles.ADMIN or self.is_staff
-        )
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
-
-    def __str__(self):
-        return (f'username: {self.username[:Config.LENGTH_ON_STR]}, '
-                f'email: {self.email[:Config.LENGTH_ON_STR]}, '
-                f'role: {self.role}')
 
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        default_related_name = 'users'
         ordering = ('username',)
+
+    def __str__(self):
+        return (f'username: {self.username[:Config.LENGTH_ON_STR]}, '
+                f'email: {self.email[:Config.LENGTH_ON_STR]}')
 
 
 User = get_user_model()
@@ -92,15 +62,10 @@ class Subscription(models.Model):
         related_name='following',  # на кого подписан
     )
 
-    def __str__(self):
-        return (
-            f'subscriber: {self.subscriber.username[:Config.LENGTH_ON_STR]}, '
-            f'author: {self.author.username[:Config.LENGTH_ON_STR]}'
-        )
-
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        ordering = ('subscriber',)
         constraints = (
             models.UniqueConstraint(
                 fields=('subscriber', 'author'),
@@ -111,6 +76,16 @@ class Subscription(models.Model):
                 name='dont_subscribe_to_yourself',
             ),
         )
+
+    def __str__(self):
+        return (
+            f'subscriber: {self.subscriber.username[:Config.LENGTH_ON_STR]}, '
+            f'author: {self.author.username[:Config.LENGTH_ON_STR]}'
+        )
+
+    def clean(self):
+        if self.subscriber == self.author:
+            raise ValidationError(Config.SUBSCRIPTION_ERROR)
 
 
 class Tag(models.Model):
@@ -127,15 +102,14 @@ class Tag(models.Model):
         unique=True,
     )
 
-    def __str__(self):
-        return (f'name: {self.name[:Config.LENGTH_ON_STR]}, '
-                f'slug: {self.slug[:Config.LENGTH_ON_STR]}')
-
     class Meta:
         verbose_name = 'Метка'
         verbose_name_plural = 'Метки'
-        default_related_name = 'tags'
         ordering = ('name',)
+
+    def __str__(self):
+        return (f'name: {self.name[:Config.LENGTH_ON_STR]}, '
+                f'slug: {self.slug[:Config.LENGTH_ON_STR]}')
 
 
 class Ingredient(models.Model):
@@ -152,17 +126,22 @@ class Ingredient(models.Model):
         max_length=Config.MEASURE_UNIT_MAX_LENGTH,
     )
 
+    class Meta:
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+        ordering = ('name',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='unique_name_measurement_unit'
+            ),
+        )
+
     def __str__(self):
         return (
             f'name: {self.name[:Config.LENGTH_ON_STR]}, '
             f'measurement_unit: {self.measurement_unit[:Config.LENGTH_ON_STR]}'
         )
-
-    class Meta:
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
-        default_related_name = 'ingredients'
-        ordering = ('name',)
 
 
 class Recipe(models.Model):
@@ -208,23 +187,18 @@ class Recipe(models.Model):
             ),
         ),
     )
-    # short_link = models.SlugField(
-    #     verbose_name='Прямая ссылка',
-    #     max_length=Config.SHORT_LINK_LENGTH,
-    #     unique=True,
-    # )
-
-    def __str__(self):
-        return (
-            f'name: {self.name[:Config.LENGTH_ON_STR]}, '
-            f'author: {self.author.username[:Config.LENGTH_ON_STR]}'
-        )
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         default_related_name = 'recipes'
         ordering = ('-pub_date', 'name')
+
+    def __str__(self):
+        return (
+            f'name: {self.name[:Config.LENGTH_ON_STR]}, '
+            f'author: {self.author.username[:Config.LENGTH_ON_STR]}'
+        )
 
 
 class RecipeIngredient(models.Model):
@@ -252,17 +226,11 @@ class RecipeIngredient(models.Model):
         ),
     )
 
-    def __str__(self):
-        return (
-            f'recipe: {self.recipe.name[:Config.LENGTH_ON_STR]}, '
-            f'ingredient: {self.ingredient.name[:Config.LENGTH_ON_STR]}, '
-            f'amount: {self.amount}'
-        )
-
     class Meta:
         verbose_name = 'Рецепт-ингредиенты'
         verbose_name_plural = 'Рецепты-ингредиенты'
-        default_related_name = 'recipeingredients'
+        default_related_name = 'recipe_ingredients'
+        ordering = ('recipe',)
         constraints = (
             models.UniqueConstraint(
                 fields=('recipe', 'ingredient'),
@@ -270,9 +238,15 @@ class RecipeIngredient(models.Model):
             ),
         )
 
+    def __str__(self):
+        return (
+            f'recipe: {self.recipe.name[:Config.LENGTH_ON_STR]}, '
+            f'ingredient: {self.ingredient.name[:Config.LENGTH_ON_STR]}, '
+            f'amount: {self.amount}'
+        )
 
-class Favorite(models.Model):
-    """Модель избранных рецептов."""
+
+class UserRecipeAbstractModel(models.Model):
 
     user = models.ForeignKey(
         User,
@@ -285,51 +259,36 @@ class Favorite(models.Model):
         verbose_name='Рецепт',
     )
 
+    class Meta:
+        abstract = True
+        ordering = ('user',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='%(class)s_unique_user_recipe'
+            ),
+        )
+
     def __str__(self):
         return (
             f'user: {self.user.username[:Config.LENGTH_ON_STR]}, '
             f'recipe: {self.recipe.name[:Config.LENGTH_ON_STR]}'
         )
 
-    class Meta:
+
+class Favorite(UserRecipeAbstractModel):
+    """Модель избранных рецептов."""
+
+    class Meta(UserRecipeAbstractModel.Meta):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('user', 'recipe'),
-                name='unique_user_recipe_favorite'
-            ),
-        )
 
 
-class ShoppingCart(models.Model):
+class ShoppingCart(UserRecipeAbstractModel):
     """Модель покупок."""
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт',
-    )
-
-    def __str__(self):
-        return (
-            f'user: {self.user.username[:Config.LENGTH_ON_STR]}, '
-            f'recipe: {self.recipe.name[:Config.LENGTH_ON_STR]}'
-        )
-
-    class Meta:
+    class Meta(UserRecipeAbstractModel.Meta):
         verbose_name = 'Покупка'
         verbose_name_plural = 'Покупки'
-        default_related_name = 'shoppingcarts'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('user', 'recipe'),
-                name='unique_user_recipe_shoppingcart'
-            ),
-        )
+        default_related_name = 'shopping_carts'

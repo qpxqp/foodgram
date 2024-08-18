@@ -1,19 +1,33 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from recipies.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient,
-    ShoppingCart, Subscription, Tag, User
+from recipies.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                             ShoppingCart, Subscription, Tag, User)
+
+# Дополнительные поля в админку пользователя
+ADDITIONAL_USER_FIELDS = ('recipes', 'subscribers')
+ADDITIONAL_USER_FIELDSET = (
+    (None, {'fields': ('avatar', *ADDITIONAL_USER_FIELDS)}),
 )
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class FoodgramUserAdmin(BaseUserAdmin):
     """Пользователи."""
 
-    list_display = ('id', 'username', 'email', 'first_name', 'last_name',
-                    'role', 'avatar',)
-    search_fields = ('email', 'username')
-    list_filter = ('role',)
+    list_display = BaseUserAdmin.list_display + ADDITIONAL_USER_FIELDS
+    add_fieldsets = BaseUserAdmin.add_fieldsets + ADDITIONAL_USER_FIELDSET
+    fieldsets = BaseUserAdmin.fieldsets + ADDITIONAL_USER_FIELDSET
+    search_fields = ADDITIONAL_USER_FIELDS
+    readonly_fields = BaseUserAdmin.readonly_fields + ADDITIONAL_USER_FIELDS
+
+    @admin.display(description='Количество рецептов')
+    def recipes(self, user):
+        return user.recipes.count()
+
+    @admin.display(description='Количество подписчиков')
+    def subscribers(self, user):
+        return user.following.count()
 
 
 @admin.register(Subscription)
@@ -39,16 +53,24 @@ class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+class IngredientsInRecipeInline(admin.TabularInline):
+    model = Recipe.ingredients.through
+    extra = 0
+    min_num = 1
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Рецепты."""
 
+    inlines = (IngredientsInRecipeInline,)
     list_display = ('id', 'pub_date', 'author', 'name', 'image', 'text',
-                    'cooking_time')
+                    'cooking_time', 'is_favorited')
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
     readonly_fields = ('is_favorited',)
 
+    @admin.display(description='В избранном')
     def is_favorited(self, recipe):
         return recipe.favorites.count()
 

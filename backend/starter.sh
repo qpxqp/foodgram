@@ -24,13 +24,14 @@ python manage.py shell -c "from recipies.models import Tag; Tag.objects.bulk_cre
   Tag(name='Ужин', slug='dinner'),\
 ])"
 
-printf %s "Create Ingredients from file: "  && \
-  printf %s "1, " && sh sh_ingredients1.sh  && \
-  printf %s "2, " && sh sh_ingredients2.sh  && \
-  printf %s "3, " && sh sh_ingredients3.sh  && \
-  printf %s "4, " && sh sh_ingredients4.sh  && \
-  printf %s "5, " && sh sh_ingredients5.sh  && \
-  echo "6." && sh sh_ingredients6.sh
+sh sh_ingredients.sh
+# printf %s "Create Ingredients from file: "  && \
+#   printf %s "1, " && sh sh_ingredients1.sh  && \
+#   printf %s "2, " && sh sh_ingredients2.sh  && \
+#   printf %s "3, " && sh sh_ingredients3.sh  && \
+#   printf %s "4, " && sh sh_ingredients4.sh  && \
+#   printf %s "5, " && sh sh_ingredients5.sh  && \
+#   echo "6." && sh sh_ingredients6.sh
 # python manage.py shell -c "from recipies.models import Ingredient; Ingredient.objects.bulk_create([ \
 #   Ingredient(name='абрикосовое варенье', measurement_unit='г'),\
 #   Ingredient(name='абрикосовый джем', measurement_unit='г'),\

@@ -1,15 +1,11 @@
 from django.db.models import Case, Q, Value, When
 from django_filters.rest_framework import FilterSet, filters
 
-from recipies.models import Ingredient, Recipe, Tag, User
+from recipies.models import Ingredient, Recipe
 
 
 class IngredientFilter(FilterSet):
 
-    # Для тестов postman
-    # name = filters.CharFilter(field_name='name', lookup_expr='istartswith')
-
-    # Двойная фильтрация ингредиентов
     name = filters.CharFilter(method='ingredient_filter')
 
     class Meta:
@@ -29,12 +25,7 @@ class IngredientFilter(FilterSet):
 
 class RecipeFilter(FilterSet):
 
-    author = filters.ModelChoiceFilter(queryset=User.objects.all())
-    tags = filters.ModelMultipleChoiceFilter(
-        field_name='tags__slug',
-        to_field_name='slug',
-        queryset=Tag.objects.all(),
-    )
+    tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     is_favorited = filters.BooleanFilter(method='is_favorited_filter')
     is_in_shopping_cart = filters.BooleanFilter(
         method='is_in_shopping_cart_filter'
@@ -51,5 +42,5 @@ class RecipeFilter(FilterSet):
 
     def is_in_shopping_cart_filter(self, queryset, name, value):
         if value and self.request.user.is_authenticated:
-            return queryset.filter(shoppingcarts__user=self.request.user)
+            return queryset.filter(shopping_carts__user=self.request.user)
         return queryset

@@ -5,7 +5,7 @@ from random import choice, choices, randint;
 from django.contrib.auth import get_user_model; User = get_user_model();
 from recipies.models import Ingredient, Recipe, Tag, RecipeIngredient, Tag;
 # NUMBER_USER = 8
-NUMBER_USER = 3
+NUMBER_USER = 4
 NUMBER_RECIPE = 30
 NAME_1 = ('Жаренная', 'Паренная', 'Варенная', 'Печеная', 'Копченая', 'Томленая')
 NAME_2 = ('морковь', 'капуста', 'картошка', 'морошка', 'пелемешка', 'фасоль')

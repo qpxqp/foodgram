@@ -37,7 +37,8 @@ class Command(BaseCommand):
                 )
             else:
                 self.stdout.write(
-                    f'{Ingredient.objects.count()} entries added... ', ending=''
+                    f'{Ingredient.objects.count()} entries added... ',
+                    ending='',
                 )
                 self.stdout.write(self.style.SUCCESS('OK'))
 
@@ -100,9 +101,12 @@ class Command(BaseCommand):
             self.stdout.write('Create recipes... ', ending='')
             NUMBER_USER = 4
             NUMBER_RECIPE = 30
-            NAME_1 = ('Жаренная', 'Паренная', 'Варенная', 'Печеная', 'Копченая', 'Томленая')
-            NAME_2 = ('морковь', 'капуста', 'картошка', 'морошка', 'пелемешка', 'фасоль')
-            ACTION = ('варить', 'жарить', 'парить', 'мешать', 'дать потомится')
+            NAME_1 = ('Жаренная', 'Паренная', 'Варенная', 'Печеная',
+                      'Копченая', 'Томленая')
+            NAME_2 = ('морковь', 'капуста', 'картошка', 'морошка',
+                      'пелемешка', 'фасоль')
+            ACTION = ('варить', 'жарить', 'парить', 'мешать',
+                      'дать потомится')
 
             def get_name(name):
                 return ''.join(choice(name))
@@ -130,7 +134,10 @@ class Command(BaseCommand):
                 Recipe.objects.bulk_create([
                     Recipe(
                         name=f'{get_name(NAME_1)} {get_name(NAME_2)}',
-                        text=f'Взять чистую кастрюлю...{get_action()}. Готово!',
+                        text=(
+                            f'Взять чистую кастрюлю...{get_action()}. '
+                            'Готово!',
+                        ),
                         author=User.objects.get(id=randint(1, NUMBER_USER)),
                         cooking_time=randint(1, 120),
                         image='recipes/images/temp.jpeg'

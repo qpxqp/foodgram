@@ -1,5 +1,5 @@
 import json
-from random import choice, choices, randint;
+from random import choice, choices, randint
 
 from django.core.management.base import BaseCommand
 from django.db.utils import IntegrityError

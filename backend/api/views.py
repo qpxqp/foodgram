@@ -143,7 +143,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def favorite_and_shopping_cart_delete(user, recipe,
-                                          listname, instance) -> Response:
+                                          model, listname) -> Response:
+        instance = model.objects.filter(user=user, recipe=recipe)
         if not instance.exists():
             raise ValidationError(
                 {'errors': Config.FAVORITE_SHOPPINGCART_NOT_EXISTS.format(
@@ -166,8 +167,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 self.get_serializer(data={'recipe': pk})
             )
         return self.favorite_and_shopping_cart_delete(
-            user, recipe, 'избранном',
-            Favorite.objects.filter(user=user, recipe=recipe)
+            user, recipe, Favorite, 'избранном',
         )
 
     @action(['post', 'delete'], detail=True,
@@ -181,8 +181,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 self.get_serializer(data={'recipe': pk})
             )
         return self.favorite_and_shopping_cart_delete(
-            user, recipe, 'списке покупок',
-            ShoppingCart.objects.filter(user=user, recipe=recipe)
+            user, recipe, ShoppingCart, 'списке покупок',
         )
 
     @action(['get'], detail=False,

@@ -43,4 +43,3 @@ class Config:
     FAVORITE_SHOPPINGCART_NOT_EXISTS = (
         'Рецепт с id={id} отвутствует в {listname} у пользователя {user}.'
     )
-    DIGIT_ERROR = 'Поле {} должно содержать только цифры.'

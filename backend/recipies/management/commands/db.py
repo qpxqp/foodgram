@@ -19,6 +19,7 @@ NAME_2 = ('морковь', 'капуста', 'картошка', 'морошк�
 ACTION = ('варить', 'жарить', 'парить', 'мешать',
           'дать потомится')
 RECIPE_IMAGES_DIR = 'recipes/images/'
+RECIPE_TEXT = 'Взять чистую кастрюлю... {actions}. Готово!'
 
 
 class Command(BaseCommand):
@@ -135,10 +136,7 @@ class Command(BaseCommand):
                 Recipe.objects.bulk_create([
                     Recipe(
                         name=f'{get_name(NAME_1)} {get_name(NAME_2)}',
-                        text=(
-                            f'Взять чистую кастрюлю...{get_action()}. '
-                            'Готово!',
-                        ),
+                        text=RECIPE_TEXT.format(actions=get_action()),
                         author=User.objects.get(
                             id=randint(2, NUMBER_USER + 1)
                         ),

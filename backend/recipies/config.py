@@ -3,7 +3,7 @@ class Config:
     LENGTH_ON_STR = 15
 
     USERNAME_PATTERN = r'[\w.@+-]+'
-    SHOPPING_CART_FILE_NAME = 'foodgram_shopping_cart_{datetime}.txt'
+    SHOPPING_CART_FILE_NAME = 'foodgram_shopping_cart_{date_time}.txt'
 
     # Настройки моделей
     USERNAME_MAX_LENGTH = 150

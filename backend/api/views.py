@@ -194,8 +194,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 {'detail': 'Список покупок пуст.'},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        # Согласно коду фронта и треду в пачке, фронт не умеет принимать
+        # имя файла от бэка, поэтому любое имя тут будет
+        # заменено фронтом на shopping-list
         file_name = Config.SHOPPING_CART_FILE_NAME.format(
-            datetime=localtime(now()).strftime('%Y%m%d%H%M%S'),
+            date_time=localtime(now()).strftime('%Y%m%d%H%M%S'),
         )
         cart_text = get_shopping_cart_text(user.username, cart_data)
         return FileResponse(

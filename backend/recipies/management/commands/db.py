@@ -12,12 +12,12 @@ TAGS_JSON = './tags.json'
 
 NUMBER_USER = 5
 NUMBER_RECIPE = 30
-NAME_1 = ('Жаренная', 'Паренная', 'Варенная', 'Печеная',
+NAME_1 = ('Жареная', 'Пареная', 'Вареная', 'Печеная',
           'Копченая', 'Томленая')
 NAME_2 = ('морковь', 'капуста', 'картошка', 'морошка',
           'пелемешка', 'фасоль')
 ACTION = ('варить', 'жарить', 'парить', 'мешать',
-          'дать потомится')
+          'дать потомиться')
 RECIPE_IMAGES_DIR = 'recipes/images/'
 RECIPE_TEXT = 'Взять чистую кастрюлю... {actions}. Готово!'
 
@@ -128,8 +128,8 @@ class Command(BaseCommand):
             def write_tags(id_start, id_end):
                 for i in range(id_start, id_end):
                     recipe = Recipe.objects.get(id=i)
-                    tags = [Tag.objects.get(id=randint(1, 6))
-                            for _ in range(1, randint(2, 6))]
+                    tags = [Tag.objects.get(id=randint(1, 4))
+                            for _ in range(1, randint(2, 4))]
                     recipe.tags.set(tags)
 
             try:

@@ -1,8 +1,6 @@
 [
     {"name": "Завтрак", "slug": "breakfast"},
-    {"name": "Перекус", "slug": "brunch"},
     {"name": "Обед", "slug": "lunch"},
     {"name": "Полдник", "slug": "teatime"},
-    {"name": "Ужин", "slug": "dinner"},
-    {"name": "Поздний ужин", "slug": "snack"}
+    {"name": "Ужин", "slug": "dinner"}
 ]

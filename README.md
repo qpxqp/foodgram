@@ -79,5 +79,5 @@ docker compose -f docker-compose.production.yml exec backend python manage.py db
 ---
 
 Проект "Foodgram": [Foodgram](https://foodgram.diapsid.ru)
-Документация: [ReDoc](https://foodgram.diapsid.ru/api/docs)
+Документация: [ReDoc](https://foodgram.diapsid.ru/api/docs/)
 Автор проекта: [AlexD](https://github.com/qpxqp)

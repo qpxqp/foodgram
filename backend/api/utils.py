@@ -14,7 +14,7 @@ def get_shopping_cart_data(user) -> QuerySet:
     ).annotate(
         amount=Sum('amount', distinct=True),
     ).order_by('ingredient__name')
-    return ingredients if ingredients else None
+    return ingredients or None
 
 
 def get_shopping_cart_text(username: str, cart_data: QuerySet) -> str:

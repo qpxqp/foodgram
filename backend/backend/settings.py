@@ -75,7 +75,7 @@ DATABASES: dict = {
         'HOST': os.getenv('DB_HOST', ''),
         'PORT': os.getenv('DB_PORT', 5432),
     }
-} if os.getenv('DB_ENGINE', 'sqlite3').lower == 'postgresql' else {
+} if os.getenv('DB_ENGINE', 'sqlite3').lower() == 'postgresql' else {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',

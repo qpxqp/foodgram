@@ -1,3 +1,4 @@
+from django.db.transaction import atomic
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
@@ -17,9 +18,8 @@ class IsSubscribedMixin(serializers.Serializer):
     def get_is_subscribed(self, author):
         user = self.context['request'].user
         return (
-            user.follower.filter(author=author).exists()
-            if user and user.is_authenticated else
-            False
+            user.is_authenticated
+            and user.follower.filter(author=author).exists()
         )
 
 
@@ -77,21 +77,11 @@ class UserRecipesSerializer(UserSerializer):
 
     def get_recipes(self, author):
         """Возвращает все/частично рецепты пользователя."""
-        try:
-            recipes_limit = (
-                int(self.context['request'].GET['recipes_limit'])
-                if self.context.get('request')
-                and self.context['request'].GET.get('recipes_limit') else
-                None
-            )
-        except ValueError:
-            raise ValidationError({
-                'recipes_limit': Config.DIGIT_ERROR.format('recipes_limit'),
-            })
+        recipes_limit = self.context['request'].GET.get('recipes_limit')
         queryset = author.recipes.all()
+        if recipes_limit and recipes_limit.isdigit():
+            queryset = queryset[:int(recipes_limit)]
         return RecipeSmallSerializer(
-            queryset[:recipes_limit]
-            if recipes_limit is not None else
             queryset,
             many=True,
             context=self.context,
@@ -198,9 +188,8 @@ class IsFavoritedIsInShoppingCartSerializer(serializers.Serializer):
     def check_exists(self, user, recipe, model) -> bool:
         """Проверяет существование объекта."""
         return (
-            False
-            if user and not user.is_authenticated else
-            model.objects.filter(user=user, recipe=recipe,).exists()
+            user.is_authenticated
+            and model.objects.filter(user=user, recipe=recipe,).exists()
         )
 
     def get_is_favorited(self, recipe):
@@ -279,6 +268,7 @@ class RecipeSerializer(IsFavoritedIsInShoppingCartSerializer,
         ) for ingredient in ingredients]
         return recipe
 
+    @atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -291,6 +281,7 @@ class RecipeSerializer(IsFavoritedIsInShoppingCartSerializer,
         )
         return recipe
 
+    @atomic
     def update(self, recipe, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')

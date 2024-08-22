@@ -67,7 +67,7 @@ docker compose -f docker-compose.production.yml exec backend python manage.py mi
 
 6. Загрузите в базу данных начальный набор ингредиентов и тегов с помощью команды:
 ```bash
-
+docker compose -f docker-compose.production.yml exec backend python manage.py db -l
 ```
 
 7. Вы можете открыть приложение в браузере по адресу [http://localhost:9000](http://localhost:9000) и увидеть его работающим.
@@ -75,8 +75,6 @@ docker compose -f docker-compose.production.yml exec backend python manage.py mi
 - Используйте `docker ps` для вывода списка контейнеров.
 
 - Используйте `docker compose -f docker-compose.production.yml down -v` для остановки стека приложений, удаления контейнеров и volumes.
-
-- Используйте `docker image rm $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep '^infra-')` для удаления образов.
 
 ---
 

@@ -169,13 +169,10 @@ jobs:
           sudo docker compose -f docker-compose.production.yml pull
           : sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
-          : sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
           : sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
           : sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
-          : sudo docker compose -f docker-compose.production.yml exec backend python manage.py db -a
-          : sudo docker compose -f docker-compose.production.yml exec backend mkdir -p /media/recipes/images/
-          : sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/temp.jpeg /media/recipes/images/
-
+          : sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+          : sudo docker compose -f docker-compose.production.yml exec backend python manage.py db -l
 
   # Notification
   send_message:

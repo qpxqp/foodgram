@@ -1,3 +1,4 @@
+from django.db.transaction import atomic
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
@@ -267,6 +268,7 @@ class RecipeSerializer(IsFavoritedIsInShoppingCartSerializer,
         ) for ingredient in ingredients]
         return recipe
 
+    @atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -279,6 +281,7 @@ class RecipeSerializer(IsFavoritedIsInShoppingCartSerializer,
         )
         return recipe
 
+    @atomic
     def update(self, recipe, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')

@@ -12,12 +12,12 @@ TAGS_JSON = './tags.json'
 
 NUMBER_USER = 5
 NUMBER_RECIPE = 30
-NAME_1 = ('Жаренная', 'Паренная', 'Варенная', 'Печеная',
+NAME_1 = ('Жареная', 'Пареная', 'Вареная', 'Печеная',
           'Копченая', 'Томленая')
 NAME_2 = ('морковь', 'капуста', 'картошка', 'морошка',
           'пелемешка', 'фасоль')
 ACTION = ('варить', 'жарить', 'парить', 'мешать',
-          'дать потомится')
+          'дать потомиться')
 RECIPE_IMAGES_DIR = 'recipes/images/'
 RECIPE_TEXT = 'Взять чистую кастрюлю... {actions}. Готово!'
 
@@ -109,18 +109,22 @@ class Command(BaseCommand):
 
             # CREATE RECIPES
             self.stdout.write('Create recipes... ', ending='')
+            ingredients_count = Ingredient.objects.count()
+            tags_count = Tag.objects.count()
 
             def get_name(name):
                 return ''.join(choice(name))
 
             def get_action():
-                return ', '.join(choices(ACTION, k=5))
+                return ', '.join(choices(ACTION, k=randint(1, 5)))
 
             def write_ingredients(id_start, id_end):
                 RecipeIngredient.objects.bulk_create([
                     RecipeIngredient(
                         recipe=Recipe.objects.get(id=i),
-                        ingredient=Ingredient.objects.get(id=randint(1, 2100)),
+                        ingredient=Ingredient.objects.get(
+                            id=randint(1, ingredients_count),
+                        ),
                         amount=randint(1, 200) * 10,
                     ) for i in range(id_start, id_end)
                 ])
@@ -128,11 +132,16 @@ class Command(BaseCommand):
             def write_tags(id_start, id_end):
                 for i in range(id_start, id_end):
                     recipe = Recipe.objects.get(id=i)
-                    tags = [Tag.objects.get(id=randint(1, 6))
-                            for _ in range(1, randint(2, 6))]
+                    tags = [Tag.objects.get(id=randint(1, tags_count))
+                            for _ in range(1, randint(2, tags_count))]
                     recipe.tags.set(tags)
 
             try:
+                if ingredients_count < 10 or tags_count < 2:
+                    raise ValueError(
+                        'Quantity of ingredients < 10 or '
+                        'Quantity of tags count < 2'
+                    )
                 Recipe.objects.bulk_create([
                     Recipe(
                         name=f'{get_name(NAME_1)} {get_name(NAME_2)}',
@@ -153,6 +162,10 @@ class Command(BaseCommand):
                         write_ingredients(id_start, id_end)
                         i += 1
                 write_tags(1, NUMBER_RECIPE + 1)
+            except ValueError as e:
+                self.stdout.write(self.style.ERROR(
+                    f'ERROR: {str(e)[:LENGTH_ON_STR]}...')
+                )
             except IntegrityError as e:
                 self.stdout.write(self.style.ERROR(
                     f'ERROR: {str(e)[:LENGTH_ON_STR]}...')
@@ -223,3 +236,4 @@ class Command(BaseCommand):
         self.stdout.write(f' - {User.objects.count()} users')
         self.stdout.write(f' - {Ingredient.objects.count()} ingredients')
         self.stdout.write(f' - {Tag.objects.count()} tags')
+        self.stdout.write(f' - {Recipe.objects.count()} recipes')

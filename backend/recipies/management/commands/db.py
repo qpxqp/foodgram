@@ -116,7 +116,7 @@ class Command(BaseCommand):
                 return ''.join(choice(name))
 
             def get_action():
-                return ', '.join(choices(ACTION, k=5))
+                return ', '.join(choices(ACTION, k=randint(1, 5)))
 
             def write_ingredients(id_start, id_end):
                 RecipeIngredient.objects.bulk_create([

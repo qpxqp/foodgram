@@ -35,7 +35,6 @@
 Проект разработан согласно микросервисной архитектуре на основе [Docker](https://www.docker.com/).
 
 ## Как развернуть проект
-**Раздел в разработке!**
 
 1. Установите [Docker Desktop](https://www.docker.com/products/docker-desktop/) согласно [инструкции](https://docs.docker.com/desktop/)
 
@@ -70,7 +69,7 @@ docker compose -f docker-compose.production.yml exec backend python manage.py mi
 docker compose -f docker-compose.production.yml exec backend python manage.py db -l
 ```
 
-7. Вы можете открыть приложение в браузере по адресу [http://localhost:9000](http://localhost:9000) и увидеть его работающим.
+7. Вы можете открыть приложение в браузере по адресу [http://localhost:8008](http://localhost:8008) и увидеть его работающим.
 
 - Используйте `docker ps` для вывода списка контейнеров.
 
@@ -79,5 +78,7 @@ docker compose -f docker-compose.production.yml exec backend python manage.py db
 ---
 
 Проект "Foodgram": [Foodgram](https://foodgram.diapsid.ru)
+
 Документация: [ReDoc](https://foodgram.diapsid.ru/api/docs/)
+
 Автор проекта: [AlexD](https://github.com/qpxqp)

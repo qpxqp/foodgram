@@ -28,7 +28,25 @@ const Technologies = () => {
                 Django REST Framework
               </li>
               <li className={styles.textItem}>
-                Djoser
+                Postgres
+              </li>
+			  <li className={styles.textItem}>
+                Nginx
+              </li>
+			  <li className={styles.textItem}>
+                Gunicorn
+              </li>
+			  <li className={styles.textItem}>
+                Node.js
+              </li>
+			  <li className={styles.textItem}>
+                React
+              </li>
+			  <li className={styles.textItem}>
+                Docker
+              </li>
+			  <li className={styles.textItem}>
+                Github Actions
               </li>
             </ul>
           </div>

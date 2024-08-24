@@ -109,6 +109,7 @@ class Command(BaseCommand):
 
             # CREATE RECIPES
             self.stdout.write('Create recipes... ', ending='')
+            recipes_in_db_count = Recipe.objects.count()
             ingredients_count = Ingredient.objects.count()
             tags_count = Tag.objects.count()
 
@@ -126,14 +127,14 @@ class Command(BaseCommand):
                             id=randint(1, ingredients_count),
                         ),
                         amount=randint(1, 200) * 10,
-                    ) for i in range(id_start, id_end)
+                    ) for i in range(id_start, id_end + 1)
                 ])
 
             def write_tags(id_start, id_end):
-                for i in range(id_start, id_end):
+                for i in range(id_start, id_end + 1):
                     recipe = Recipe.objects.get(id=i)
                     tags = [Tag.objects.get(id=randint(1, tags_count))
-                            for _ in range(1, randint(2, tags_count))]
+                            for _ in range(1, randint(2, tags_count) + 1)]
                     recipe.tags.set(tags)
 
             try:
@@ -161,7 +162,7 @@ class Command(BaseCommand):
                     if id_start < id_end:
                         write_ingredients(id_start, id_end)
                         i += 1
-                write_tags(1, NUMBER_RECIPE + 1)
+                write_tags(1, NUMBER_RECIPE)
             except ValueError as e:
                 self.stdout.write(self.style.ERROR(
                     f'ERROR: {str(e)[:LENGTH_ON_STR]}...')
@@ -172,7 +173,8 @@ class Command(BaseCommand):
                 )
             else:
                 self.stdout.write(
-                    f'{Recipe.objects.count()} entries added... ', ending=''
+                    f'{Recipe.objects.count() - recipes_in_db_count} '
+                    'entries added... ', ending=''
                 )
                 self.stdout.write(self.style.SUCCESS('OK'))
 

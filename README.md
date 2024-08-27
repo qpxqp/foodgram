@@ -34,7 +34,7 @@
 
 Проект разработан согласно микросервисной архитектуре на основе [Docker](https://www.docker.com/).
 
-## Как развернуть проект
+## Как развернуть проект локально
 
 1. Установите [Docker Desktop](https://www.docker.com/products/docker-desktop/) согласно [инструкции](https://docs.docker.com/desktop/)
 
@@ -44,36 +44,38 @@
 git clone git@github.com:qpxqp/foodgram.git
 ```
 
-3. В локальной директории проекта клонированного репозитория создаёте файл `.env` и заполнить его по аналогии с файлом `.env.example`.
+3. В локальной директории проекта клонированного репозитория создайте файл `.env` и заполнить его по аналогии с файлом `.env.example`.
 
 4. В локальной директории проекта клонированного репозитория запустите стек приложений с помощью команды:
 
 ```bash
-docker compose -f docker-compose.production.yml up -d
+docker compose up -d
 ```
 
 5. Соберите статические данные и примените миграции с помощью команд:
 
 ```bash
-docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+docker compose exec backend python manage.py collectstatic
 ```
 ```bash
-docker compose -f docker-compose.production.yml exec backend cp -r /app/collect_static/. /backend_static/static/
+docker compose exec backend cp -r /app/collected_static/. /backend_static/static/
 ```
 ```bash
-docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+docker compose exec backend python manage.py migrate
 ```
 
 6. Загрузите в базу данных начальный набор ингредиентов и тегов с помощью команды:
 ```bash
-docker compose -f docker-compose.production.yml exec backend python manage.py db -l
+docker compose exec backend python manage.py db -l
 ```
 
-7. Вы можете открыть приложение в браузере по адресу [http://localhost:8008](http://localhost:8008) и увидеть его работающим.
+7. Вы можете открыть приложение в браузере по адресу [http://localhost](http://localhost) и увидеть его работающим.
 
 - Используйте `docker ps` для вывода списка контейнеров.
 
-- Используйте `docker compose -f docker-compose.production.yml down -v` для остановки стека приложений, удаления контейнеров и volumes.
+- Используйте `docker compose down -v` для остановки стека приложений, удаления контейнеров и volumes.
+
+- Используйте `docker image rm $(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep '^foodgram-')` для удаления образов.
 
 ---
 

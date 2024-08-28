@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.utils.safestring import mark_safe
 
 from recipies.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                              ShoppingCart, Subscription, Tag, User)
@@ -64,8 +65,8 @@ class RecipeAdmin(admin.ModelAdmin):
     """Рецепты."""
 
     inlines = (IngredientsInRecipeInline,)
-    list_display = ('id', 'pub_date', 'author', 'name', 'image', 'text',
-                    'cooking_time', 'is_favorited')
+    list_display = ('id', 'image_display', 'pub_date', 'author', 'name',
+                    'text', 'cooking_time', 'is_favorited')
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
     readonly_fields = ('is_favorited',)
@@ -73,6 +74,12 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='В избранном')
     def is_favorited(self, recipe):
         return recipe.favorites.count()
+
+    @admin.display(description='Изображение')
+    def image_display(self, recipe):
+        return mark_safe(
+            f'<img src={recipe.image.url} width="50" height="50">'
+        )
 
 
 @admin.register(RecipeIngredient)
